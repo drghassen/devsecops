@@ -3,1160 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard IoT | Analytics Avancés</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>EcoTrack • Dashboard IoT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            --secondary-gradient: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
-            --success-gradient: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
-            --warning-gradient: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
-            --dark-bg: #0f172a;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-primary: #ffffff;
-            --text-secondary: #cbd5e1;
-            --accent-color: #3b82f6;
-            --sidebar-width: 280px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --primary: #4361ee;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --glass: rgba(255, 255, 255, 0.15);
+            --border: rgba(255, 255, 255, 0.2);
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-primary);
-            overflow-x: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #e2e8f0;
             min-height: 100vh;
+            background-attachment: fixed;
         }
 
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--border-color);
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 2.5rem;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-gradient);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-text h2 {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .logo-text span {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            border-radius: 12px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--text-primary);
-        }
-
-        .nav-item.active {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-color);
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .nav-item i {
-            font-size: 1.1rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        .sidebar-footer {
-            position: absolute;
-            bottom: 2rem;
-            left: 1.5rem;
-            right: 1.5rem;
-        }
-
-        .update-status {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-        }
-
-        .update-status i {
-            color: #10b981;
-            margin-right: 8px;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            padding: 2rem;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .header-title h1 {
-            font-weight: 700;
-            font-size: 2rem;
-            margin-bottom: 4px;
-        }
-
-        .header-title p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .notification-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .notification-btn:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #ef4444;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .user-profile:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        .user-info h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .user-info span {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        /* Cards Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .metric-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 20px;
-            padding: 1.5rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .navbar-custom {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .category-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        .metric-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .metric-card::before {
+        .category-btn::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.7s;
         }
 
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
+        .category-btn:hover::before {
+            left: 100%;
         }
 
-        .metric-title h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
         }
-        .metric-value {
-            font-size: 2rem;
+
+        .metric-big {
+            font-size: 2.8rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--accent-color);
-        }
-
-        .metric-trend {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        .trend-up {
-            color: #10b981;
-        }
-
-        .trend-down {
-            color: #ef4444;
-        }
-
-        /* Charts Section */
-        .charts-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            letter-spacing: -1px;
         }
 
         .chart-container {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 18px;
+            padding: 1.8rem;
+            border: 1px solid var(--border);
         }
 
-        .chart-container:hover {
-            border-color: rgba(59, 130, 246, 0.3);
+        .table-custom {
+            background: transparent;
+            border-radius: 16px;
+            overflow: hidden;
         }
 
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
+        .table-custom thead {
+            background: rgba(67, 97, 238, 0.3);
+            color: white;
         }
 
-        .chart-title h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .chart-title p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .chart-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .chart-action-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+        .table-custom tbody tr {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
-        .chart-action-btn:hover {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--accent-color);
+        .table-custom tbody tr:hover {
+            background: rgba(67, 97, 238, 0.15);
+            transform: scale(1.01);
         }
 
-        /* Devices Table */
-        .devices-section {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            padding: 1.5rem 1.5rem 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .devices-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .devices-table thead th {
-            padding: 1rem 1.5rem;
-            text-align: left;
+        .badge-eco {
+            padding: 0.5em 1em;
+            border-radius: 50px;
             font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .devices-table tbody tr {
-            transition: all 0.3s ease;
-            border-bottom: 1px solid var(--border-color);
+        .pulse {
+            animation: pulse 3s infinite;
         }
 
-        .devices-table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .devices-table tbody tr:hover {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .devices-table tbody td {
-            padding: 1.2rem 1.5rem;
-            color: var(--text-primary);
-        }
-
-        .device-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .device-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(59, 130, 246, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-color);
-        }
-
-        .device-details h4 {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 2px;
-        }
-
-        .device-details span {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status-active {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-        }
-
-        .status-inactive {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .metric-card, .chart-container, .devices-section {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .metric-card:nth-child(1) { animation-delay: 0.1s; }
-        .metric-card:nth-child(2) { animation-delay: 0.2s; }
-        .metric-card:nth-child(3) { animation-delay: 0.3s; }
-        .metric-card:nth-child(4) { animation-delay: 0.4s; }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .charts-section {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .sidebar.active {
-                transform: translateX(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-
-        /* Toggle Sidebar */
-        .menu-toggle {
-            display: none;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            width: 44px;
-            height: 44px;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 101;
-        }
-
-        @media (max-width: 992px) {
-            .menu-toggle {
-                display: flex;
-            }
-        }
-
-        /* Progress bars */
-        .progress-container {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 1s ease-in-out;
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
-<body>
-    <!-- Menu Toggle Mobile -->
-    <button class="menu-toggle" id="menuToggle">
-        <i class="fas fa-bars"></i>
-    </button>
+<body class="text-light">
 
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-chart-network"></i>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold fs-4" href="#">
+                <i class="fas fa-leaf text-success me-2"></i>EcoTrack <span class="text-primary">IoT</span>
+            </a>
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-sm">
+                    <i class="fas fa-clock text-warning me-2"></i>
+                    Dernière mise à jour : <span id="last-update" class="fw-semibold">00:00:00</span>
                 </div>
-                <div class="logo-text">
-                    <h2>IoT Analytics</h2>
-                    <span>Dashboard Professionnel</span>
+                <div class="pulse">
+                    <i class="fas fa-circle text-success fs-6"></i> Live
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <nav class="nav-menu">
-                <a href="#" class="nav-item active">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Tableau de Bord</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-microchip"></i>
-                    <span>Matériel</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-bolt"></i>
-                    <span>Énergie</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-network-wired"></i>
-                    <span>Réseau</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Paramètres</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Aide & Support</span>
-                </a>
-            </nav>
+    <div class="container-fluid px-4 py-5">
 
-            <div class="sidebar-footer">
-                <div class="update-status">
-                    <i class="fas fa-circle"></i>
-                    <span>Dernière mise à jour: <span id="lastUpdateTime">15:42:23</span></span>
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">
+                Tableau de Bord <span class="text-primary">Éco-Responsable</span>
+            </h1>
+            <p class="lead opacity-80">Suivi en temps réel de l’impact environnemental de vos devices IoT</p>
+        </div>
+
+        <!-- Catégories -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="category-btn glass-card" data-category="hardware">
+                    <i class="fas fa-microchip fa-2x mb-3 text-primary"></i>
+                    <h5 class="fw-semibold">Matériel</h5>
+                    <small>CPU • RAM • Batterie</small>
                 </div>
             </div>
-        </aside>
+            <div class="col-md-3">
+                <div class="category-btn glass-card" data-category="energy">
+                    <i class="fas fa-bolt fa-2x mb-3 text-warning"></i>
+                    <h5 class="fw-semibold">Énergie</h5>
+                    <small>Puissance • Température</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="category-btn glass-card" data-category="network">
+                    <i class="fas fa-wifi fa-2x mb-3 text-info"></i>
+                    <h5 class="fw-semibold">Réseau</h5>
+                    <small>Requêtes • Cloud</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="category-btn glass-card active">
+                    <i class="fas fa-chart-bar fa-2x mb-3 text-success"></i>
+                    <h5 class="fw-semibold">Scores Éco</h5>
+                    <small>Impact • Obsolescence</small>
+                </div>
+            </div>
+        </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-title">
-                    <h1>Dashboard IoT</h1>
-                    <p>Surveillance en temps réel des performances et de l'énergie</p>
+        <!-- Métriques principales -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-microchip fa-2x text-primary mb-3"></i>
+                    <p class="mb-1 opacity-75">CPU Moyen</p>
+                    <h3 class="metric-big text-primary" id="avg-cpu">--%</h3>
                 </div>
-                <div class="header-actions">
-                    <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </button>
-                    <div class="user-profile">
-                        <div class="user-avatar">AD</div>
-                        <div class="user-info">
-                            <h4>Admin Dashboard</h4>
-                            <span>Administrateur Système</span>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-memory fa-2x text-purple mb-3"></i>
+                    <p class="mb-1 opacity-75">RAM Moyenne</p>
+                    <h3 class="metric-big text-purple" id="avg-ram">--%</h3>
                 </div>
-            </header>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-bolt fa-2x text-warning mb-3"></i>
+                    <p class="mb-1 opacity-75">Puissance</p>
+                    <h3 class="metric-big text-warning" id="avg-power">-- W</h3>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-leaf fa-2x text-success mb-3"></i>
+                    <p class="mb-1 opacity-75">Score Éco Global</p>
+                    <h3 class="metric-big text-success" id="avg-eco">--</h3>
+                </div>
+            </div>
+        </div>
 
-            <!-- Metrics Grid -->
-            <section class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-title">
-                            <h3>CPU Moyen</h3>
-                            <div class="metric-value" id="cpuValue">42.5%</div>
-                        </div>
-                        <div class="metric-icon">
-                            <i class="fas fa-microchip"></i>
-                        </div>
-                    </div>
-                    <div class="metric-trend trend-down">
-                        <i class="fas fa-arrow-down"></i>
-                        <span>2.3% depuis hier</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 42.5%; background: #6a11cb;"></div>
-                    </div>
+        <!-- Graphiques -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6">
+                <div class="chart-container glass-card">
+                    <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>CPU & RAM</h5>
+                    <canvas id="cpuRamChart"></canvas>
                 </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container glass-card">
+                    <h5 class="mb-4"><i class="fas fa-plug me-2 text-warning"></i>Consommation Énergétique</h5>
+                    <canvas id="energyChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container glass-card">
+                    <h5 class="mb-4"><i class="fas fa-seedling me-2 text-success"></i>Score Écologique</h5>
+                    <canvas id="ecoChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container glass-card">
+                    <h5 class="mb-4"><i class="fas fa-smog me-2 text-danger"></i>Émissions CO₂</h5>
+                    <canvas id="co2Chart"></canvas>
+                </div>
+            </div>
+        </div>
 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-title">
-                            <h3>RAM Utilisée</h3>
-                            <div class="metric-value" id="ramValue">67.8%</div>
-                        </div>
-                        <div class="metric-icon">
-                            <i class="fas fa-memory"></i>
-                        </div>
-                    </div>
-                    <div class="metric-trend trend-up">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>1.7% depuis hier</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 67.8%; background: #2575fc;"></div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-title">
-                            <h3>Puissance Moyenne</h3>
-                            <div class="metric-value" id="powerValue">124W</div>
-                        </div>
-                        <div class="metric-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                    </div>
-                    <div class="metric-trend trend-down">
-                        <i class="fas fa-arrow-down"></i>
-                        <span>5.2% depuis hier</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 62%; background: #ff7e5f;"></div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-title">
-                            <h3>Score Écologique</h3>
-                            <div class="metric-value" id="ecoValue">82.4</div>
-                        </div>
-                        <div class="metric-icon">
-                            <i class="fas fa-leaf"></i>
-                        </div>
-                    </div>
-                    <div class="metric-trend trend-up">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>3.1% depuis hier</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 82.4%; background: #00b09b;"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <div class="chart-title">
-                            <h3>Utilisation CPU & RAM</h3>
-                            <p>24 dernières heures</p>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="chart-action-btn">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <canvas id="cpuRamChart" height="250"></canvas>
-                </div>
-
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <div class="chart-title">
-                            <h3>Consommation Énergétique</h3>
-                            <p>Watts par appareil</p>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="chart-action-btn">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="chart-action-btn">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <canvas id="energyChart" height="250"></canvas>
-                </div>
-            </section>
-
-            <!-- Devices Table -->
-            <section class="devices-section">
-                <div class="section-header">
-                    <div>
-                        <h3>Appareils Connectés</h3>
-                        <p>10 appareils actifs surveillés</p>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-plus me-2"></i>Ajouter un appareil
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="devices-table">
-                        <thead>
-                            <tr>
-                                <th>Appareil</th>
-                                <th>Type</th>
-                                <th>CPU</th>
-                                <th>RAM</th>
-                                <th>Puissance</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div class="device-info">
-                                        <div class="device-icon">
-                                            <i class="fas fa-server"></i>
-                                        </div>
-                                        <div class="device-details">
-                                            <h4>Serveur Principal</h4>
-                                            <span>ID: SRV-001</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Serveur</td>
-                                <td>45%</td>
-                                <td>72%</td>
-                                <td>185W</td>
-                                <td><span class="status-badge status-active">Actif</span></td>
-                                <td>
-                                    <button class="chart-action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="device-info">
-                                        <div class="device-icon">
-                                            <i class="fas fa-thermometer-half"></i>
-                                        </div>
-                                        <div class="device-details">
-                                            <h4>Capteur Température</h4>
-                                            <span>ID: TEMP-042</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Capteur</td>
-                                <td>12%</td>
-                                <td>34%</td>
-                                <td>18W</td>
-                                <td><span class="status-badge status-active">Actif</span></td>
-                                <td>
-                                    <button class="chart-action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="device-info">
-                                        <div class="device-icon">
-                                            <i class="fas fa-camera"></i>
-                                        </div>
-                                        <div class="device-details">
-                                            <h4>Caméra Surveillance</h4>
-                                            <span>ID: CAM-017</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Caméra</td>
-                                <td>68%</td>
-                                <td>82%</td>
-                                <td>42W</td>
-                                <td><span class="status-badge status-warning">Charge élevée</span></td>
-                                <td>
-                                    <button class="chart-action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="device-info">
-                                        <div class="device-icon">
-                                            <i class="fas fa-wifi"></i>
-                                        </div>
-                                        <div class="device-details">
-                                            <h4>Routeur IoT</h4>
-                                            <span>ID: RTR-005</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Routeur</td>
-                                <td>32%</td>
-                                <td>56%</td>
-                                <td>28W</td>
-                                <td><span class="status-badge status-active">Actif</span></td>
-                                <td>
-                                    <button class="chart-action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="device-info">
-                                        <div class="device-icon">
-                                            <i class="fas fa-database"></i>
-                                        </div>
-                                        <div class="device-details">
-                                            <h4>Base de Données</h4>
-                                            <span>ID: DB-003</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>Base de données</td>
-                                <td>51%</td>
-                                <td>89%</td>
-                                <td>156W</td>
-                                <td><span class="status-badge status-warning">RAM élevée</span></td>
-                                <td>
-                                    <button class="chart-action-btn">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+        <!-- Tableau des dernières données -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-4 border-bottom border-white border-opacity-10">
+                <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Dernières mesures IoT</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Capteur</th>
+                            <th>CPU</th>
+                            <th>RAM</th>
+                            <th>Puissance</th>
+                            <th>Score Éco</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <!-- Rempli dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar toggle for mobile
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
+        // === Même logique JS que avant, juste plus propre ===
+        let chartLabels = [], cpuData = [], ramData = [], powerData = [], ecoData = [], co2Data = [], latestData = [];
 
-        // Update time function
+        const charts = {};
+
+        function updateAverages() {
+            const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : 0;
+            document.getElementById('avg-cpu').textContent = avg(cpuData) + '%';
+            document.getElementById('avg-ram').textContent = avg(ramData) + '%';
+            document.getElementById('avg-power').textContent = avg(powerData) + ' W';
+            document.getElementById('avg-eco').textContent = avg(ecoData);
+        }
+
+        function initCharts() {
+            Object.values(charts).forEach(c => c.destroy());
+
+            const opts = { responsive: true, plugins: { legend: { labels: { color: '#e2e8f0' } } }, scales: { x: { ticks: { color: '#94a3b8' }}, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } } } };
+
+            charts.cpuRam = new Chart('cpuRamChart', { type: 'line', data: { labels: chartLabels, datasets: [
+                { label: 'CPU %', data: cpuData, borderColor: '#4361ee', tension: 0.4, fill: false },
+                { label: 'RAM %', data: ramData, borderColor: '#a78bfa', tension: 0.4, fill: false }
+            ]}, options: opts });
+
+            charts.energy = new Chart('energyChart', { type: 'bar', data: { labels: chartLabels, datasets: [{ label: 'Watts', data: powerData, backgroundColor: '#f59e0b' }] }, options: opts });
+
+            charts.eco = new Chart('ecoChart', { type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Score Éco', data: ecoData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', fill: true }] }, options: opts });
+
+            charts.co2 = new Chart('co2Chart', { type: 'line', data: { labels: chartLabels, datasets: [{ label: 'CO₂ (g)', data: co2Data, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.2)', fill: true }] }, options: opts });
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = latestData.length ? latestData.map(d => `
+                <tr>
+                    <td>${d.id}</td>
+                    <td>${d.hardware_sensor_id}</td>
+                    <td>${d.cpu_usage}%</td>
+                    <td>${d.ram_usage}%</td>
+                    <td>${d.power_watts}W</td>
+                    <td><span class="badge-eco ${d.eco_score >= 75 ? 'bg-success' : d.eco_score >= 50 ? 'bg-warning' : 'bg-danger'}">${d.eco_score}</span></td>
+                    <td>${new Date(d.created_at).toLocaleString('fr-FR')}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="7" class="text-center py-5 opacity-50">Aucune donnée</td></tr>';
+        }
+
         function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('fr-FR', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+        }
+
+        async function refreshData() {
+            try {
+                const res = await fetch('/api/api/dashboard-data/');
+                if (res.ok) {
+                    const data = await res.json();
+                    ({ chart_labels: chartLabels, cpu_data: cpuData, ram_data: ramData, power_data: powerData, eco_data: ecoData, co2_data: co2Data, latest_data: latestData } = data);
+                    updateAverages();
+                    initCharts();
+                    updateTable();
+                    updateTime();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Refresh toutes les 1.5 secondes
+        setInterval(refreshData, 1500);
+        refreshData();
+
+        // Navigation catégories
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cat = btn.dataset.category;
+                if (cat) window.location.href = `/api/${cat}/`;
             });
-            document.getElementById('lastUpdateTime').textContent = timeString;
-        }
-
-        // Update time every second
-        setInterval(updateTime, 1000);
-        updateTime();
-
-        // Generate random data for charts
-        function generateTimeLabels() {
-            const labels = [];
-            for (let i = 23; i >= 0; i--) {
-                const hour = new Date(Date.now() - i * 60 * 60 * 1000).getHours();
-                labels.push(`${hour}h`);
-            }
-            return labels;
-        }
-
-        function generateRandomData(min, max, points = 24) {
-            const data = [];
-            for (let i = 0; i < points; i++) {
-                data.push(Math.random() * (max - min) + min);
-            }
-            return data;
-        }
-
-        // Initialize charts
-        const timeLabels = generateTimeLabels();
-
-        // CPU & RAM Chart
-        const cpuRamCtx = document.getElementById('cpuRamChart').getContext('2d');
-        const cpuRamChart = new Chart(cpuRamCtx, {
-            type: 'line',
-            data: {
-                labels: timeLabels,
-                datasets: [
-                    {
-                        label: 'CPU (%)',
-                        data: generateRandomData(30, 70),
-                        borderColor: '#6a11cb',
-                        backgroundColor: 'rgba(106, 17, 203, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'RAM (%)',
-                        data: generateRandomData(40, 80),
-                        borderColor: '#2575fc',
-                        backgroundColor: 'rgba(37, 117, 252, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#cbd5e1'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1',
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Energy Chart
-        const energyCtx = document.getElementById('energyChart').getContext('2d');
-        const energyChart = new Chart(energyCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Serveur', 'Capteur', 'Caméra', 'Routeur', 'Base de données', 'Switch', 'Gateway'],
-                datasets: [{
-                    label: 'Consommation (W)',
-                    data: [185, 18, 42, 28, 156, 65, 38],
-                    backgroundColor: [
-                        'rgba(106, 17, 203, 0.8)',
-                        'rgba(37, 117, 252, 0.8)',
-                        'rgba(255, 126, 95, 0.8)',
-                        'rgba(0, 176, 155, 0.8)',
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(59, 130, 246, 0.8)',
-                        'rgba(139, 92, 246, 0.8)'
-                    ],
-                    borderColor: [
-                        '#6a11cb',
-                        '#2575fc',
-                        '#ff7e5f',
-                        '#00b09b',
-                        '#f59e0b',
-                        '#3b82f6',
-                        '#8b5cf6'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#cbd5e1'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1',
-                            callback: function(value) {
-                                return value + 'W';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Simulate live data updates
-        function updateMetrics() {
-            // Randomly update metric values
-            const cpuElement = document.getElementById('cpuValue');
-            const ramElement = document.getElementById('ramValue');
-            const powerElement = document.getElementById('powerValue');
-            const ecoElement = document.getElementById('ecoValue');
-            
-            const currentCpu = parseFloat(cpuElement.textContent);
-            const currentRam = parseFloat(ramElement.textContent);
-            const currentPower = parseFloat(powerElement.textContent);
-            const currentEco = parseFloat(ecoElement.textContent);
-            
-            // Add small random variation
-            cpuElement.textContent = (currentCpu + (Math.random() * 2 - 1)).toFixed(1) + '%';
-            ramElement.textContent = (currentRam + (Math.random() * 2 - 1)).toFixed(1) + '%';
-            powerElement.textContent = Math.round(currentPower + (Math.random() * 4 - 2)) + 'W';
-            ecoElement.textContent = (currentEco + (Math.random() * 1 - 0.5)).toFixed(1);
-            
-            // Update progress bars
-            document.querySelectorAll('.progress-bar')[0].style.width = cpuElement.textContent;
-            document.querySelectorAll('.progress-bar')[1].style.width = ramElement.textContent;
-            document.querySelectorAll('.progress-bar')[2].style.width = (parseFloat(powerElement.textContent) / 200 * 100) + '%';
-            document.querySelectorAll('.progress-bar')[3].style.width = ecoElement.textContent + '%';
-            
-            // Update chart data
-            cpuRamChart.data.datasets[0].data.shift();
-            cpuRamChart.data.datasets[0].data.push(parseFloat(cpuElement.textContent));
-            
-            cpuRamChart.data.datasets[1].data.shift();
-            cpuRamChart.data.datasets[1].data.push(parseFloat(ramElement.textContent));
-            
-            cpuRamChart.update('none');
-        }
-
-        // Update metrics every 5 seconds
-        setInterval(updateMetrics, 5000);
-
-        // Add click effect to cards
-        document.querySelectorAll('.metric-card').forEach(card => {
-            card.addEventListener('click', function() {
-                this.style.transform = 'translateY(-8px) scale(1.02)';
-                setTimeout(() => {
-                    this.style.transform = 'translateY(-8px)';
-                }, 150);
-            });
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (event) => {
-            if (window.innerWidth <= 992) {
-                if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-                    sidebar.classList.remove('active');
-                }
-            }
         });
     </script>
 </body>
