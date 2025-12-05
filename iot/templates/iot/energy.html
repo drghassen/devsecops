@@ -3,323 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Énergie - IoT Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>EcoTrack • Énergie</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            margin: 2rem auto;
-            padding: 2rem;
-            max-width: 1400px;
-        }
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: transform 0.3s ease;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        .chart-container {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .data-table {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .table thead th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-        }
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
+        :root { --primary:#4361ee; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --dark:#0f172a; --light:#f8fafc; --gray:#64748b; --glass:rgba(255,255,255,0.15); --border:rgba(255,255,255,0.2);}        
+        body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#334155 100%); color:#e2e8f0; min-height:100vh; background-attachment:fixed; }
+        .glass-card{ background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:20px; border:1px solid var(--border); box-shadow:0 8px 32px rgba(0,0,0,.3); transition:all .4s ease; }
+        .glass-card:hover{ transform:translateY(-8px); box-shadow:0 20px 40px rgba(0,0,0,.4); }
+        .navbar-custom{ background:rgba(15,23,42,.7); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+        .chart-container{ background:rgba(15,23,42,.6); border-radius:18px; padding:1.8rem; border:1px solid var(--border); }
+        .table-custom{ border-radius:14px; overflow:hidden; background:rgba(15,23,42,.35); border:1px solid rgba(255,255,255,.08); }
+        .table-custom thead th{ background:rgba(67,97,238,.18); color:#000000; font-weight:700; border:0; padding:.9rem 1rem; letter-spacing:.2px; backdrop-filter:blur(8px); }
+        .table-custom tbody tr{ background:transparent; transition:transform .2s ease, background-color .25s ease, box-shadow .25s ease; }
+        .table-custom tbody tr:nth-child(odd){ background:rgba(255,255,255,.02); }
+        .table-custom tbody td{ padding:.75rem 1rem; border-top:1px solid rgba(255,255,255,.06); color:#000000; vertical-align:middle; font-weight:600; }
+        .table-custom tbody tr:hover{ background:rgba(67,97,238,.08); transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.25); }
+        .metric-big{ font-size:2.2rem; font-weight:700; letter-spacing:-.5px; }
+    .badge { border-radius: 999px; padding: .3rem .6rem; font-weight: 600; font-size: .75rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 -1px 0 rgba(255,255,255,0.06); }
+        .badge.bg-success { background-color: rgba(16,185,129,0.18) !important; color: #34d399; }
+        .badge.bg-warning { background-color: rgba(245,158,11,0.18) !important; color: #fbbf24; }
+        .badge.bg-danger  { background-color: rgba(239,68,68,0.18) !important; color: #f87171; }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="fas fa-arrow-left me-2"></i>Retour au Dashboard
-            </a>
-            <div class="navbar-text text-white">
-                <i class="fas fa-bolt me-2"></i>Énergie - Dernière mise à jour: <span id="last-update">{% now "H:i:s" %}</span>
+<body class="text-light">
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold fs-4" href="{% url 'dashboard' %}"><i class="fas fa-leaf text-success me-2"></i>EcoTrack <span class="text-primary">IoT</span></a>
+            <div class="d-flex align-items-center gap-4">
+                <div class="text-sm"><i class="fas fa-clock text-warning me-2"></i>Dernière mise à jour : <span id="last-update" class="fw-semibold">{% now "H:i:s" %}</span></div>
+                <div class="pulse"><i class="fas fa-circle text-success fs-6"></i> Live</div>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid dashboard-container">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="text-center mb-4" style="color: #667eea; font-weight: bold;">
-                    <i class="fas fa-bolt me-2"></i>Données Énergétiques IoT
-                </h2>
-            </div>
+    <div class="container-fluid px-4 py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">Données <span class="text-warning">Énergétiques</span></h1>
+            <p class="lead opacity-80">Consommation, émissions CO₂, surchauffe et activité des appareils</p>
         </div>
 
-        <!-- Métriques principales -->
-        <div class="row mb-4">
+        <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
-                <div class="metric-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>Puissance Moyenne</h5>
-                            <h3 id="avg-power">-</h3>
-                        </div>
-                        <i class="fas fa-plug fa-2x"></i>
-                    </div>
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-plug fa-2x text-warning mb-3"></i>
+                    <p class="mb-1 opacity-75">Puissance Moyenne</p>
+                    <h3 class="metric-big text-warning" id="avg-power">-</h3>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="metric-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>CO2 Moyen</h5>
-                            <h3 id="avg-co2">-</h3>
-                        </div>
-                        <i class="fas fa-cloud fa-2x"></i>
-                    </div>
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-cloud fa-2x text-danger mb-3"></i>
+                    <p class="mb-1 opacity-75">CO₂ Moyen</p>
+                    <h3 class="metric-big text-danger" id="avg-co2">-</h3>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="metric-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>Surchauffe Moyenne</h5>
-                            <h3 id="avg-overheating">-</h3>
-                        </div>
-                        <i class="fas fa-thermometer-half fa-2x"></i>
-                    </div>
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-thermometer-half fa-2x text-warning mb-3"></i>
+                    <p class="mb-1 opacity-75">Surchauffe</p>
+                    <h3 class="metric-big text-warning" id="avg-overheating">-</h3>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="metric-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>Appareils Actifs</h5>
-                            <h3 id="avg-active">-</h3>
-                        </div>
-                        <i class="fas fa-desktop fa-2x"></i>
-                    </div>
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-desktop fa-2x text-success mb-3"></i>
+                    <p class="mb-1 opacity-75">Appareils Actifs</p>
+                    <h3 class="metric-big text-success" id="avg-active">-</h3>
                 </div>
             </div>
         </div>
 
-        <!-- Graphiques -->
-        <div class="row">
+        <div class="row g-4 mb-4">
             <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5 class="mb-3"><i class="fas fa-plug me-2"></i>Consommation Électrique</h5>
+                <div class="chart-container glass-card">
+                    <h5 class="mb-3"><i class="fas fa-plug me-2 text-warning"></i>Consommation Électrique</h5>
                     <canvas id="powerChart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5 class="mb-3"><i class="fas fa-cloud me-2"></i>Émissions CO2</h5>
+                <div class="chart-container glass-card">
+                    <h5 class="mb-3"><i class="fas fa-cloud me-2 text-danger"></i>Émissions CO₂</h5>
                     <canvas id="co2Chart"></canvas>
                 </div>
             </div>
         </div>
-
-        <div class="row">
+        <div class="row g-4 mb-5">
             <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5 class="mb-3"><i class="fas fa-thermometer-half me-2"></i>Niveau de Surchauffe</h5>
+                <div class="chart-container glass-card">
+                    <h5 class="mb-3"><i class="fas fa-thermometer-half me-2 text-warning"></i>Niveau de Surchauffe</h5>
                     <canvas id="overheatingChart"></canvas>
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5 class="mb-3"><i class="fas fa-desktop me-2"></i>Appareils Actifs</h5>
+                <div class="chart-container glass-card">
+                    <h5 class="mb-3"><i class="fas fa-desktop me-2 text-success"></i>Appareils Actifs</h5>
                     <canvas id="activeDevicesChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Table des données énergétiques -->
-        <div class="row">
-            <div class="col-12">
-                <div class="data-table">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Dernières Données Énergétiques</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Sensor ID</th>
-                                        <th>Puissance (W)</th>
-                                        <th>CO2 (g)</th>
-                                        <th>Surchauffe</th>
-                                        <th>Appareils Actifs</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="data-table-body">
-                                    {% for data in latest_data %}
-                                    <tr>
-                                        <td>{{ data.id }}</td>
-                                        <td>{{ data.energy_sensor_id }}</td>
-                                        <td>{{ data.power_watts }}W</td>
-                                        <td>{{ data.co2_equiv_g }}g</td>
-                                        <td>
-                                            <span class="badge
-                                                {% if data.overheating > 80 %}bg-danger
-                                                {% elif data.overheating > 60 %}bg-warning
-                                                {% else %}bg-success
-                                                {% endif %}">
-                                                {{ data.overheating }}°C
-                                            </span>
-                                        </td>
-                                        <td>{{ data.active_devices }}</td>
-                                        <td>{{ data.created_at|date:"d/m/Y H:i" }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">Aucune donnée disponible</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        <div class="glass-card overflow-hidden">
+            <div class="p-4 border-bottom border-white border-opacity-10">
+                <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Dernières Données Énergétiques</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Sensor ID</th>
+                            <th>Puissance (W)</th>
+                            <th>CO₂ (g)</th>
+                            <th>Surchauffe</th>
+                            <th>Appareils Actifs</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        {% for data in latest_data %}
+                        <tr>
+                            <td>{{ data.id }}</td>
+                            <td>{{ data.energy_sensor_id }}</td>
+                            <td>{{ data.power_watts }}W</td>
+                            <td>{{ data.co2_equiv_g }}g</td>
+                            <td><span class="badge {% if data.overheating > 80 %}bg-danger{% elif data.overheating > 60 %}bg-warning{% else %}bg-success{% endif %}">{{ data.overheating }}°C</span></td>
+                            <td>{{ data.active_devices }}</td>
+                            <td>{{ data.created_at|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 opacity-50">Aucune donnée disponible</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Données du contexte Django
         let chartLabels = JSON.parse('{{ chart_labels|escapejs }}' || '[]');
         let powerData = JSON.parse('{{ power_data|escapejs }}' || '[]');
         let co2Data = JSON.parse('{{ co2_data|escapejs }}' || '[]');
         let overheatingData = JSON.parse('{{ overheating_data|escapejs }}' || '[]');
         let activeDevicesData = JSON.parse('{{ active_devices_data|escapejs }}' || '[]');
 
-        // Calcul des moyennes
-        function calculateAverage(data) {
-            if (!data || data.length === 0) return 0;
-            return (data.reduce((a, b) => a + b, 0) / data.length).toFixed(1);
-        }
-
-        // Mettre à jour les moyennes
-        function updateAverages() {
-            document.getElementById('avg-power').textContent = calculateAverage(powerData) + 'W';
-            document.getElementById('avg-co2').textContent = calculateAverage(co2Data) + 'g';
-            document.getElementById('avg-overheating').textContent = calculateAverage(overheatingData) + '°C';
+        function calculateAverage(d){ if(!d||!d.length) return 0; return (d.reduce((a,b)=>a+b,0)/d.length).toFixed(1); }
+        function updateAverages(){
+            document.getElementById('avg-power').textContent = calculateAverage(powerData) + ' W';
+            document.getElementById('avg-co2').textContent = calculateAverage(co2Data) + ' g';
+            document.getElementById('avg-overheating').textContent = calculateAverage(overheatingData) + ' °C';
             document.getElementById('avg-active').textContent = Math.round(calculateAverage(activeDevicesData));
         }
 
-        // Configuration commune des graphiques
-        const commonOptions = {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        };
+        const commonOptions = { responsive:true, plugins:{ legend:{ labels:{ color:'#e2e8f0' } } }, scales:{ x:{ ticks:{ color:'#94a3b8' }}, y:{ ticks:{ color:'#94a3b8' }, grid:{ color:'rgba(255,255,255,0.1)' } } } };
+        function createChart(id,type,datasets,options=commonOptions){ const ctx=document.getElementById(id).getContext('2d'); return new Chart(ctx,{ type, data:{ labels:chartLabels, datasets }, options }); }
 
-        // Fonction pour créer un graphique
-        function createChart(canvasId, type, datasets, options = commonOptions) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctx, {
-                type: type,
-                data: {
-                    labels: chartLabels,
-                    datasets: datasets
-                },
-                options: options
-            });
-        }
-
-        // Initialiser les graphiques
-        let charts = {};
-
-        function initializeCharts() {
-            // Détruire les graphiques existants
-            Object.values(charts).forEach(chart => chart.destroy());
-            charts = {};
-
-            if (chartLabels.length > 0) {
-                // Graphique Puissance
-                charts.powerChart = createChart('powerChart', 'bar', [{
-                    label: 'Puissance (Watts)',
-                    data: powerData,
-                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
-                    borderColor: '#ffc107',
-                    borderWidth: 1
-                }]);
-
-                // Graphique CO2
-                charts.co2Chart = createChart('co2Chart', 'area', [{
-                    label: 'CO2 (g)',
-                    data: co2Data,
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.3)',
-                    fill: true
-                }]);
-
-                // Graphique Surchauffe
-                charts.overheatingChart = createChart('overheatingChart', 'line', [{
-                    label: 'Température (°C)',
-                    data: overheatingData,
-                    borderColor: '#fd7e14',
-                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                    tension: 0.4
-                }]);
-
-                // Graphique Appareils Actifs
-                charts.activeDevicesChart = createChart('activeDevicesChart', 'line', [{
-                    label: 'Nombre d\'appareils',
-                    data: activeDevicesData,
-                    borderColor: '#20c997',
-                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                    tension: 0.4
-                }]);
+        let charts={};
+        function initializeCharts(){
+            Object.values(charts).forEach(c=>c.destroy()); charts={};
+            if(chartLabels.length){
+                charts.powerChart = createChart('powerChart','bar',[{ label:'Puissance (W)', data:powerData, backgroundColor:'#f59e0b' }]);
+                charts.co2Chart = createChart('co2Chart','line',[{ label:'CO₂ (g)', data:co2Data, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.2)', fill:true, tension:.4 }]);
+                charts.overheatingChart = createChart('overheatingChart','line',[{ label:'Température (°C)', data:overheatingData, borderColor:'#f97316', backgroundColor:'rgba(249,115,22,0.2)', fill:true, tension:.4 }]);
+                charts.activeDevicesChart = createChart('activeDevicesChart','line',[{ label:"Nombre d'appareils", data:activeDevicesData, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,0.2)', fill:true, tension:.4 }]);
             }
         }
 
-        // Mettre à jour l'heure de dernière mise à jour
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('fr-FR');
-            document.getElementById('last-update').textContent = timeString;
-        }
-
-        // Initialiser
-        updateAverages();
-        initializeCharts();
-        updateLastUpdateTime();
+        function updateLastUpdateTime(){ document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR'); }
+        updateAverages(); initializeCharts(); updateLastUpdateTime();
     </script>
 </body>
 </html>
