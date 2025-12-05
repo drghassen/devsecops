@@ -21,22 +21,166 @@
             --border: rgba(255, 255, 255, 0.2);
         }
 
+        /* FIX 1: Supprimer les marges négatives et assurer une hauteur complète */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden; /* Évite le scroll horizontal */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             color: #e2e8f0;
             min-height: 100vh;
             background-attachment: fixed;
-            overflow-x: hidden;
-        }
-        html { overflow-x: hidden; }
-        .content-shift { margin-left: 110px; transition: margin-left .25s ease; }
-        body.sidebar-open .content-shift { margin-left: 280px; }
-        @media (max-width: 991.98px){
-            .content-shift { margin-left: 0 !important; }
-            body.sidebar-open .content-shift { margin-left: 0 !important; }
         }
 
+        /* FIX 2: Layout principal corrigé */
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+        }
+
+        /* FIX 3: Sidebar fixe */
+        .sidebar { 
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 110px;
+            background: rgba(15,23,42,.7);
+            backdrop-filter: blur(14px);
+            border-right: 1px solid rgba(255,255,255,.12);
+            z-index: 1029;
+            transition: width .25s ease;
+            overflow-y: auto; /* Scroll vertical si nécessaire */
+            overflow-x: hidden; /* Cache le scroll horizontal */
+        }
+        
+        .sidebar.expanded { 
+            width: 280px; 
+        }
+
+        /* FIX 4: Contenu principal avec margin-left */
+        .main-content-wrapper {
+            flex: 1;
+            margin-left: 110px; /* Correspond à la largeur initiale de la sidebar */
+            transition: margin-left .25s ease;
+            width: calc(100% - 110px); /* Assure que ça prend le reste de l'espace */
+            min-height: 100vh;
+            overflow-x: hidden; /* Empêche le scroll horizontal */
+        }
+
+        body.sidebar-open .main-content-wrapper {
+            margin-left: 280px; /* Quand la sidebar est étendue */
+            width: calc(100% - 280px);
+        }
+
+        /* FIX 5: Conteneur principal */
+        .container-fluid {
+            max-width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        /* FIX 6: Ajustements responsives */
+        @media (max-width: 991.98px) {
+            .main-content-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            
+            .sidebar { 
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.expanded { 
+                transform: translateX(0);
+            }
+        }
+
+        /* FIX 7: Correction des éléments qui dépassent */
+        .row {
+            margin-left: -15px;
+            margin-right: -15px;
+        }
+
+        .col-md-3, .col-lg-3, .col-md-6, .col-lg-6, .col-12 {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        /* FIX 8: Ajustement des graphiques */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        /* FIX 9: Correction de la table */
+        .table-responsive {
+            overflow-x: auto; /* Scroll horizontal seulement si nécessaire */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* FIX 10: Largeur des cartes de catégories */
+        .category-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            max-width: 100%;
+            box-sizing: border-box; /* Important pour inclure padding dans la largeur */
+        }
+
+        /* FIX 11: Métriques principales */
+        .metric-big {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            word-break: break-word; /* Évite le débordement */
+        }
+
+        /* FIX 12: Ajustement du contenu */
+        .content-shift {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* FIX 13: Correction du navbar */
+        .navbar-custom {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* FIX 14: Ajustement des cards */
         .glass-card {
             background: var(--glass);
             backdrop-filter: blur(16px);
@@ -45,49 +189,48 @@
             border: 1px solid var(--border);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transition: all 0.4s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .glass-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        /* FIX 15: Empêcher les débordements horizontaux */
+        * {
+            max-width: 100%;
         }
 
-        .navbar-custom {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
+        /* FIX 16: Correction spécifique pour mobile */
+        @media (max-width: 768px) {
+            .metric-big {
+                font-size: 1.8rem;
+            }
+            
+            .category-btn {
+                padding: 0.75rem 1rem;
+            }
+            
+            .glass-card {
+                margin-bottom: 1rem;
+            }
         }
-        /* Sidebar ultra-fine et responsive */
-        .sidebar { position: fixed; top:0; left:0; height:100vh; width:110px; background: rgba(15,23,42,.7); backdrop-filter: blur(14px); border-right:1px solid rgba(255,255,255,.12); z-index:1029; transition: width .25s ease; }
-        .sidebar.expanded{ width:280px; }
-        .sidebar .brand { height:64px; display:flex; align-items:center; gap:10px; padding:0 14px; }
-        .sidebar .brand .label{ opacity:0; transform: translateX(-8px); transition: all .2s ease; white-space: nowrap; }
+
+        /* FIX 17: Ajustement du conteneur de toast */
+        .position-fixed.top-0.end-0 {
+            right: 15px !important;
+            max-width: 60vw;
+        }
+
+        /* Styles existants conservés */
+        .brand { height:64px; display:flex; align-items:center; gap:10px; padding:0 14px; }
+        .brand .label{ opacity:0; transform: translateX(-8px); transition: all .2s ease; white-space: nowrap; }
         .sidebar.expanded .brand .label{ opacity:1; transform:none; }
         .nav-list { list-style:none; padding:8px; margin:0; }
-        .nav-item { border-radius:12px; overflow:hidden; }
+        .nav-item { border-radius:12px; }
         .nav-link { display:flex; align-items:center; gap:12px; color:#e2e8f0; text-decoration:none; padding:12px 14px; border-radius:12px; transition: background .2s ease, transform .2s ease; }
         .nav-link:hover { background: rgba(67,97,238,.18); transform: translateY(-1px); }
         .nav-link .label{ opacity:0; transform: translateX(-8px); transition: all .2s ease; white-space: nowrap; }
         .sidebar.expanded .nav-link .label{ opacity:1; transform:none; }
         .sidebar-toggle{ position:absolute; top:14px; right:-14px; width:28px; height:28px; border-radius:50%; background: rgba(15,23,42,.9); border:1px solid rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-        @media (max-width: 991.98px){
-            .sidebar{ transform: translateX(-100%); width:280px; }
-            .sidebar.expanded{ transform: translateX(0); }
-            .content-shift{ margin-left:0 !important; }
-        }
-
-        .category-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 1.2rem 1.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
+        
         .category-btn::before {
             content: '';
             position: absolute;
@@ -108,22 +251,8 @@
             box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
         }
 
-        .metric-big {
-            font-size: 2.8rem;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-        .chart-container {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 18px;
-            padding: 1.8rem;
-            border: 1px solid var(--border);
-        }
-
         .table-custom {
             border-radius: 14px;
-            overflow: hidden;
             background: rgba(15, 23, 42, 0.35);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
@@ -167,7 +296,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
         }
-        /* Harmonisation avec les autres interfaces */
+
         .badge {
             border-radius: 999px;
             padding: .3rem .6rem;
@@ -191,167 +320,180 @@
     </style>
 </head>
 <body class="text-light">
+    <!-- FIX 18: Structure HTML corrigée -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="brand">
+                <i class="fas fa-leaf text-success fs-2"></i>
+                <span class="label fw-bold">EcoTrack <span class="text-primary">IoT</span></span>
+                <div id="sidebarToggle" class="sidebar-toggle"><i class="fas fa-angles-right"></i></div>
+            </div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><i class="fas fa-gauge-high"></i><span class="label">Dashboard</span></a></li>
+                <li class="nav-item"><a href="{% url 'hardware' %}" class="nav-link"><i class="fas fa-microchip"></i><span class="label">Matériel</span></a></li>
+                <li class="nav-item"><a href="{% url 'energy' %}" class="nav-link"><i class="fas fa-bolt"></i><span class="label">Énergie</span></a></li>
+                <li class="nav-item"><a href="{% url 'network' %}" class="nav-link"><i class="fas fa-wifi"></i><span class="label">Réseau</span></a></li>
+                <li class="nav-item"><a href="{% url 'scores' %}" class="nav-link"><i class="fas fa-chart-bar"></i><span class="label">Scores</span></a></li>
+                <li class="nav-item"><a href="{% url 'quiz' %}" class="nav-link"><i class="fas fa-circle-question"></i><span class="label">Quiz</span></a></li>
+            </ul>
+            <div class="px-3"><small class="text-secondary">v1.0</small></div>
+        </aside>
 
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar">
-        <div class="brand">
-            <i class="fas fa-leaf text-success fs-4"></i>
-            <span class="label fw-bold">EcoTrack <span class="text-primary">IoT</span></span>
-            <div id="sidebarToggle" class="sidebar-toggle"><i class="fas fa-angles-right"></i></div>
-        </div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><i class="fas fa-gauge-high"></i><span class="label">Dashboard</span></a></li>
-            <li class="nav-item"><a href="{% url 'hardware' %}" class="nav-link"><i class="fas fa-microchip"></i><span class="label">Matériel</span></a></li>
-            <li class="nav-item"><a href="{% url 'energy' %}" class="nav-link"><i class="fas fa-bolt"></i><span class="label">Énergie</span></a></li>
-            <li class="nav-item"><a href="{% url 'network' %}" class="nav-link"><i class="fas fa-wifi"></i><span class="label">Réseau</span></a></li>
-            <li class="nav-item"><a href="{% url 'scores' %}" class="nav-link"><i class="fas fa-chart-bar"></i><span class="label">Scores</span></a></li>
-            <li class="nav-item"><a href="{% url 'quiz' %}" class="nav-link"><i class="fas fa-circle-question"></i><span class="label">Quiz</span></a></li>
-        </ul>
-        <div class="px-3"><small class="text-secondary">v1.0</small></div>
-    </aside>
+        <!-- Contenu principal -->
+        <div class="main-content-wrapper">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+                <div class="container-fluid px-4">
+                    <a class="navbar-brand fw-bold fs-4" href="#">
+                        <i class="fas fa-leaf text-success me-2"></i>EcoTrack <span class="text-primary">IoT</span>
+                    </a>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="text-sm">
+                            <i class="fas fa-clock text-warning me-2"></i>
+                            Dernière mise à jour : <span id="last-update" class="fw-semibold">00:00:00</span>
+                        </div>
+                        <div class="pulse">
+                            <i class="fas fa-circle text-success fs-6"></i> Live
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top content-shift">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold fs-4" href="#">
-                <i class="fas fa-leaf text-success me-2"></i>EcoTrack <span class="text-primary">IoT</span>
-            </a>
-            <div class="d-flex align-items-center gap-4">
-                <div class="text-sm">
-                    <i class="fas fa-clock text-warning me-2"></i>
-                    Dernière mise à jour : <span id="last-update" class="fw-semibold">00:00:00</span>
+            <!-- Contenu -->
+            <div class="container-fluid content-shift">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold mb-3">
+                        Tableau de Bord <span class="text-primary">Éco-Responsable</span>
+                    </h1>
+                    <p class="lead opacity-80">Suivi en temps réel de l'impact environnemental de vos devices IoT</p>
                 </div>
-                <div class="pulse">
-                    <i class="fas fa-circle text-success fs-6"></i> Live
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container-fluid px-4 py-5 content-shift">
+                <!-- Catégories -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3">
+                        <div class="category-btn glass-card" data-category="hardware">
+                            <i class="fas fa-microchip fa-2x mb-3 text-primary"></i>
+                            <h5 class="fw-semibold">Matériel</h5>
+                            <small>CPU • RAM • Batterie</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="category-btn glass-card" data-category="energy">
+                            <i class="fas fa-bolt fa-2x mb-3 text-warning"></i>
+                            <h5 class="fw-semibold">Énergie</h5>
+                            <small>Puissance • Température</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="category-btn glass-card" data-category="network">
+                            <i class="fas fa-wifi fa-2x mb-3 text-info"></i>
+                            <h5 class="fw-semibold">Réseau</h5>
+                            <small>Requêtes • Cloud</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="category-btn glass-card active">
+                            <i class="fas fa-chart-bar fa-2x mb-3 text-success"></i>
+                            <h5 class="fw-semibold">Scores Éco</h5>
+                            <small>Impact • Obsolescence</small>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Header -->
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold mb-3">
-                Tableau de Bord <span class="text-primary">Éco-Responsable</span>
-            </h1>
-            <p class="lead opacity-80">Suivi en temps réel de l’impact environnemental de vos devices IoT</p>
-        </div>
+                <!-- Métriques principales -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="glass-card p-4 text-center">
+                            <i class="fas fa-microchip fa-2x text-primary mb-3"></i>
+                            <p class="mb-1 opacity-75">CPU Moyen</p>
+                            <h3 class="metric-big text-primary" id="avg-cpu">--%</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="glass-card p-4 text-center">
+                            <i class="fas fa-memory fa-2x text-purple mb-3"></i>
+                            <p class="mb-1 opacity-75">RAM Moyenne</p>
+                            <h3 class="metric-big text-purple" id="avg-ram">--%</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="glass-card p-4 text-center">
+                            <i class="fas fa-bolt fa-2x text-warning mb-3"></i>
+                            <p class="mb-1 opacity-75">Puissance</p>
+                            <h3 class="metric-big text-warning" id="avg-power">-- W</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="glass-card p-4 text-center">
+                            <i class="fas fa-leaf fa-2x text-success mb-3"></i>
+                            <p class="mb-1 opacity-75">Score Éco Global</p>
+                            <h3 class="metric-big text-success" id="avg-eco">--</h3>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Catégories -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="category-btn glass-card" data-category="hardware">
-                    <i class="fas fa-microchip fa-2x mb-3 text-primary"></i>
-                    <h5 class="fw-semibold">Matériel</h5>
-                    <small>CPU • RAM • Batterie</small>
+                <!-- Graphiques -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-6">
+                        <div class="glass-card p-3">
+                            <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>CPU & RAM</h5>
+                            <div class="chart-container">
+                                <canvas id="cpuRamChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="glass-card p-3">
+                            <h5 class="mb-4"><i class="fas fa-plug me-2 text-warning"></i>Consommation Énergétique</h5>
+                            <div class="chart-container">
+                                <canvas id="energyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="glass-card p-3">
+                            <h5 class="mb-4"><i class="fas fa-seedling me-2 text-success"></i>Score Écologique</h5>
+                            <div class="chart-container">
+                                <canvas id="ecoChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="glass-card p-3">
+                            <h5 class="mb-4"><i class="fas fa-smog me-2 text-danger"></i>Émissions CO₂</h5>
+                            <div class="chart-container">
+                                <canvas id="co2Chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="category-btn glass-card" data-category="energy">
-                    <i class="fas fa-bolt fa-2x mb-3 text-warning"></i>
-                    <h5 class="fw-semibold">Énergie</h5>
-                    <small>Puissance • Température</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="category-btn glass-card" data-category="network">
-                    <i class="fas fa-wifi fa-2x mb-3 text-info"></i>
-                    <h5 class="fw-semibold">Réseau</h5>
-                    <small>Requêtes • Cloud</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="category-btn glass-card active">
-                    <i class="fas fa-chart-bar fa-2x mb-3 text-success"></i>
-                    <h5 class="fw-semibold">Scores Éco</h5>
-                    <small>Impact • Obsolescence</small>
-                </div>
-            </div>
-        </div>
 
-        <!-- Métriques principales -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-3 col-md-6">
-                <div class="glass-card p-4 text-center">
-                    <i class="fas fa-microchip fa-2x text-primary mb-3"></i>
-                    <p class="mb-1 opacity-75">CPU Moyen</p>
-                    <h3 class="metric-big text-primary" id="avg-cpu">--%</h3>
+                <!-- Tableau des dernières données -->
+                <div class="glass-card mb-5">
+                    <div class="p-4 border-bottom border-white border-opacity-10">
+                        <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Dernières mesures IoT</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Capteur</th>
+                                    <th>CPU</th>
+                                    <th>RAM</th>
+                                    <th>Puissance</th>
+                                    <th>Score Éco</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-table-body">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="glass-card p-4 text-center">
-                    <i class="fas fa-memory fa-2x text-purple mb-3"></i>
-                    <p class="mb-1 opacity-75">RAM Moyenne</p>
-                    <h3 class="metric-big text-purple" id="avg-ram">--%</h3>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="glass-card p-4 text-center">
-                    <i class="fas fa-bolt fa-2x text-warning mb-3"></i>
-                    <p class="mb-1 opacity-75">Puissance</p>
-                    <h3 class="metric-big text-warning" id="avg-power">-- W</h3>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="glass-card p-4 text-center">
-                    <i class="fas fa-leaf fa-2x text-success mb-3"></i>
-                    <p class="mb-1 opacity-75">Score Éco Global</p>
-                    <h3 class="metric-big text-success" id="avg-eco">--</h3>
-                </div>
-            </div>
-        </div>
-
-        <!-- Graphiques -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-6">
-                <div class="chart-container glass-card">
-                    <h5 class="mb-4"><i class="fas fa-brain me-2 text-primary"></i>CPU & RAM</h5>
-                    <canvas id="cpuRamChart"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-container glass-card">
-                    <h5 class="mb-4"><i class="fas fa-plug me-2 text-warning"></i>Consommation Énergétique</h5>
-                    <canvas id="energyChart"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-container glass-card">
-                    <h5 class="mb-4"><i class="fas fa-seedling me-2 text-success"></i>Score Écologique</h5>
-                    <canvas id="ecoChart"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-container glass-card">
-                    <h5 class="mb-4"><i class="fas fa-smog me-2 text-danger"></i>Émissions CO₂</h5>
-                    <canvas id="co2Chart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tableau des dernières données -->
-        <div class="glass-card overflow-hidden">
-            <div class="p-4 border-bottom border-white border-opacity-10">
-                <h4 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>Dernières mesures IoT</h4>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-custom table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Capteur</th>
-                            <th>CPU</th>
-                            <th>RAM</th>
-                            <th>Puissance</th>
-                            <th>Score Éco</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-body">
-                        <!-- Rempli dynamiquement -->
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -362,7 +504,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // === Même logique JS que avant, juste plus propre ===
+        // === Même logique JS que avant ===
         let chartLabels = [], cpuData = [], ramData = [], powerData = [], ecoData = [], co2Data = [], latestData = [];
 
         const charts = {};
@@ -375,7 +517,7 @@
             co2: { limit: 500, cmp: '>' , title: 'CO₂ élevé', message: v=>`CO₂ ${v}g > 500g` },
             eco_score: { limit: 40, cmp: '<' , title: 'Score Éco faible', message: v=>`Score Éco ${v} < 40` }
         };
-        const toastCooldown = {}; // évite le spam des toasts
+        const toastCooldown = {};
         const COOLDOWN_MS = 10000;
 
         function canToast(key){ const now=Date.now(); if(!toastCooldown[key]||now-toastCooldown[key]>COOLDOWN_MS){ toastCooldown[key]=now; return true;} return false; }
@@ -399,10 +541,10 @@
                     <button type="button" class="btn-close btn-close-white ms-3 mt-1" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>`;
             wrapper.appendChild(el);
-            new bootstrap.Toast(el,{delay:5000, autohide:true}).show();
+            new bootstrap.Toast(el,{delay:10000, autohide:true}).show();
         }
         function compare(val, conf){ if(val==null) return false; return conf.cmp==='>' ? (val>conf.limit) : (val<conf.limit); }
-        function checkThresholds(row){ if(!row) return; // row = dernier enregistrement
+        function checkThresholds(row){ if(!row) return;
             try{
                 const cpu = Number(row.cpu_usage);
                 const ram = Number(row.ram_usage);
@@ -431,22 +573,153 @@
         function initCharts() {
             Object.values(charts).forEach(c => c.destroy());
 
-            const opts = { responsive: true, plugins: { legend: { labels: { color: '#e2e8f0' } } }, scales: { x: { ticks: { color: '#94a3b8' }}, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } } } };
+            const baseOpts = { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        labels: { 
+                            color: '#e2e8f0',
+                            font: {
+                                size: 12
+                            }
+                        } 
+                    } 
+                }, 
+                scales: { 
+                    x: { 
+                        ticks: { 
+                            color: '#94a3b8',
+                            maxRotation: 45
+                        }
+                    }, 
+                    y: { 
+                        ticks: { 
+                            color: '#94a3b8' 
+                        }, 
+                        grid: { 
+                            color: 'rgba(255,255,255,0.1)' 
+                        } 
+                    } 
+                } 
+            };
 
-            charts.cpuRam = new Chart('cpuRamChart', { type: 'line', data: { labels: chartLabels, datasets: [
-                { label: 'CPU %', data: cpuData, borderColor: '#4361ee', tension: 0.4, fill: false },
-                { label: 'RAM %', data: ramData, borderColor: '#a78bfa', tension: 0.4, fill: false }
-            ]}, options: opts });
+            charts.cpuRam = new Chart('cpuRamChart', { 
+                type: 'line', 
+                data: { 
+                    labels: chartLabels, 
+                    datasets: [
+                        { 
+                            label: 'CPU %', 
+                            data: cpuData, 
+                            borderColor: '#4361ee', 
+                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            tension: 0.4, 
+                            fill: true 
+                        },
+                        { 
+                            label: 'RAM %', 
+                            data: ramData, 
+                            borderColor: '#a78bfa', 
+                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            tension: 0.4, 
+                            fill: true 
+                        }
+                    ]
+                }, 
+                options: { 
+                    ...baseOpts, 
+                    scales: { 
+                        ...baseOpts.scales, 
+                        y: { 
+                            ...baseOpts.scales.y, 
+                            min: 0, 
+                            max: 100 
+                        } 
+                    } 
+                } 
+            });
 
-            charts.energy = new Chart('energyChart', { type: 'bar', data: { labels: chartLabels, datasets: [{ label: 'Watts', data: powerData, backgroundColor: '#f59e0b' }] }, options: opts });
+            charts.energy = new Chart('energyChart', { 
+                type: 'bar', 
+                data: { 
+                    labels: chartLabels, 
+                    datasets: [{ 
+                        label: 'Watts', 
+                        data: powerData, 
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1
+                    }] 
+                }, 
+                options: { 
+                    ...baseOpts, 
+                    scales: { 
+                        ...baseOpts.scales, 
+                        y: { 
+                            ...baseOpts.scales.y, 
+                            min: 0 
+                        } 
+                    } 
+                } 
+            });
 
-            charts.eco = new Chart('ecoChart', { type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Score Éco', data: ecoData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', fill: true }] }, options: opts });
+            charts.eco = new Chart('ecoChart', { 
+                type: 'line', 
+                data: { 
+                    labels: chartLabels, 
+                    datasets: [{ 
+                        label: 'Score Éco', 
+                        data: ecoData, 
+                        borderColor: '#10b981', 
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)', 
+                        tension: 0.4,
+                        fill: true 
+                    }] 
+                }, 
+                options: { 
+                    ...baseOpts, 
+                    scales: { 
+                        ...baseOpts.scales, 
+                        y: { 
+                            ...baseOpts.scales.y, 
+                            min: 0, 
+                            max: 100 
+                        } 
+                    } 
+                } 
+            });
 
-            charts.co2 = new Chart('co2Chart', { type: 'line', data: { labels: chartLabels, datasets: [{ label: 'CO₂ (g)', data: co2Data, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.2)', fill: true }] }, options: opts });
+            charts.co2 = new Chart('co2Chart', { 
+                type: 'line', 
+                data: { 
+                    labels: chartLabels, 
+                    datasets: [{ 
+                        label: 'CO₂ (g)', 
+                        data: co2Data, 
+                        borderColor: '#ef4444', 
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)', 
+                        tension: 0.4,
+                        fill: true 
+                    }] 
+                }, 
+                options: { 
+                    ...baseOpts, 
+                    scales: { 
+                        ...baseOpts.scales, 
+                        y: { 
+                            ...baseOpts.scales.y, 
+                            min: 0 
+                        } 
+                    } 
+                } 
+            });
         }
 
         function updateTable() {
             const tbody = document.getElementById('data-table-body');
+            if (!tbody) return;
+            
             tbody.innerHTML = latestData.length ? latestData.map(d => `
                 <tr>
                     <td>${d.id}</td>
@@ -479,8 +752,8 @@
             } catch (e) { console.error(e); }
         }
 
-        // Refresh toutes les 1.5 secondes
-        setInterval(refreshData, 1500);
+        // Rafraîchissement automatique
+        // setInterval(refreshData, 1500);
         refreshData();
 
         // Navigation catégories
@@ -500,10 +773,29 @@
         }
         let expanded = false;
         toggle.addEventListener('click', ()=>{ expanded = !expanded; setExpanded(expanded); });
-        sidebar.addEventListener('mouseenter', ()=>{ if(window.innerWidth>=992) setExpanded(true); });
-        sidebar.addEventListener('mouseleave', ()=>{ if(window.innerWidth>=992) setExpanded(false); });
-        window.addEventListener('resize', ()=>{ if(window.innerWidth<992){ setExpanded(true); } else { setExpanded(false); } });
-        if(window.innerWidth<992){ setExpanded(true); }
+        
+        // Pour desktop: hover effect
+        if(window.innerWidth >= 992){
+            sidebar.addEventListener('mouseenter', ()=>{ setExpanded(true); });
+            sidebar.addEventListener('mouseleave', ()=>{ setExpanded(false); });
+        }
+        
+        window.addEventListener('resize', ()=>{
+            if(window.innerWidth < 992){
+                // Sur mobile: sidebar fixe cachée
+                sidebar.removeEventListener('mouseenter', ()=>{});
+                sidebar.removeEventListener('mouseleave', ()=>{});
+                setExpanded(true); // Toujours étendue sur mobile
+            } else {
+                // Sur desktop: hover effect
+                sidebar.addEventListener('mouseenter', ()=>{ setExpanded(true); });
+                sidebar.addEventListener('mouseleave', ()=>{ setExpanded(false); });
+            }
+        });
+        
+        if(window.innerWidth < 992){ 
+            setExpanded(true); 
+        }
     </script>
 </body>
 </html>

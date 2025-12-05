@@ -1,21 +1,5 @@
-# IoT Dashboard Category Navigation Implementation
-
-## Completed Tasks
-- [x] Analyzed the environment and identified missing templates
-- [x] Created hardware.html template for hardware category data
-- [x] Created scores.html template for scores category data
-- [x] Made category cards in dashboard.html clickable to navigate to respective category pages
-- [x] Added JavaScript event listeners for category card clicks
-- [x] Fixed URL paths to use /api/ prefix as per Django URL configuration
-
-## Summary
-- Created two new templates: `iot/templates/iot/hardware.html` and `iot/templates/iot/scores.html`
-- Modified `iot/templates/iot/dashboard.html` to add click functionality to category cards
-- Category cards now redirect to `/api/hardware/`, `/api/energy/`, `/api/network/`, `/api/scores/` respectively
-- All templates follow the same design pattern and include relevant charts and data tables for each category
-
-## Testing
-- Ensure Django server is running
-- Navigate to /api/dashboard/ and click on category cards
-- Verify that each category page loads with appropriate data and charts
-- Test the "Retour au Dashboard" links on category pages
+- [x] Réduire la taille de police de .metric-big de 2.8rem à 2.2rem
+- [x] Changer le padding des cartes de métriques de p-4 à p-3
+- [ ] Réduire le padding des boutons de catégories de 1.2rem 1.5rem à 1rem 1.2rem
+- [ ] Réduire le padding des conteneurs de graphiques de 1.8rem à 1.5rem
+- [ ] Réduire le padding des cellules du tableau de 0.75rem 1rem à 0.6rem 0.8rem
