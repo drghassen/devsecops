@@ -36,6 +36,7 @@ class IoTData(models.Model):
     obsolescence_score = models.IntegerField()
     bigtech_dependency = models.IntegerField()
     co2_savings_kg_year = models.IntegerField()
+    recommendations = models.JSONField(default=dict, blank=True)
 
     # ---------- TIMESTAMP ENREGISTREMENT ----------
     created_at = models.DateTimeField(auto_now_add=True)

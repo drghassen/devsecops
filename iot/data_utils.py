@@ -219,6 +219,7 @@ def get_scores_data_dict():
             'obsolescence_score': data.obsolescence_score,
             'bigtech_dependency': data.bigtech_dependency,
             'co2_savings_kg_year': data.co2_savings_kg_year,
+            'recommendations': data.recommendations,
             'created_at': data.created_at.isoformat(),
         } for data in latest_data
     ]

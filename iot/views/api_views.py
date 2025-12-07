@@ -18,6 +18,9 @@ def iot_data_post(request):
     try:
         data = json.loads(request.body)
         
+        # Extract scores data (handle nested structure)
+        scores_data = data.get('scores', data)
+        
         # Create new IoT data record
         iot_data = IoTData.objects.create(
             hardware_sensor_id=data['hardware_sensor_id'],
@@ -39,10 +42,13 @@ def iot_data_post(request):
             network_load_mbps=data['network_load_mbps'],
             requests_per_min=data['requests_per_min'],
             cloud_dependency_score=data['cloud_dependency_score'],
-            eco_score=data['eco_score'],
-            obsolescence_score=data['obsolescence_score'],
-            bigtech_dependency=data['bigtech_dependency'],
-            co2_savings_kg_year=data['co2_savings_kg_year'],
+            
+            # Scores from nested object or root
+            eco_score=scores_data.get('eco_score', 0),
+            obsolescence_score=scores_data.get('obsolescence_score', 0),
+            bigtech_dependency=scores_data.get('bigtech_dependency', 0),
+            co2_savings_kg_year=scores_data.get('co2_savings_kg_year', 0),
+            recommendations=scores_data.get('recommendations', {}),
         )
         
         # Send updated data via WebSocket to all connected clients

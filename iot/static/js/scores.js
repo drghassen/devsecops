@@ -50,7 +50,7 @@
                         color: 'success'
                     }
                 ],
-                tableColumns: 7,
+                tableColumns: 8,
                 tableRenderer: (data) => `
                     <tr>
                         <td>${data.id}</td>
@@ -60,9 +60,33 @@
                         <td>${data.bigtech_dependency}</td>
                         <td>${data.co2_savings_kg_year} kg/an</td>
                         <td>${new Date(data.created_at).toLocaleString('fr-FR')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                onclick="showRecommendations('${encodeURIComponent(JSON.stringify(data.recommendations || {}))}')"
+                                title="Voir les recommandations">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
                     </tr>
                 `
             });
+        }
+
+        init() {
+            super.init();
+            this.loadInitialTableData();
+        }
+
+        loadInitialTableData() {
+            try {
+                const el = document.getElementById('latest-data-source');
+                if (el) {
+                    const data = JSON.parse(el.textContent);
+                    this.updateTable(data);
+                }
+            } catch (e) {
+                console.error('Erreur chargement données initiales table:', e);
+            }
         }
     }
 

@@ -84,6 +84,7 @@
                     <th>BigTech</th>
                     <th>Économies CO₂</th>
                     <th>Date</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="data-table-body">
@@ -91,7 +92,9 @@
                 <tr>
                     <td>{{ data.id }}</td>
                     <td>{{ data.hardware_sensor_id }}</td>
-                    <td><span class="badge {% if data.eco_score >= 75 %}bg-success{% elif data.eco_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">{{ data.eco_score }}</span></td>
+                    <td><span
+                            class="badge {% if data.eco_score >= 75 %}bg-success{% elif data.eco_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">{{
+                            data.eco_score }}</span></td>
                     <td>{{ data.obsolescence_score }}</td>
                     <td>{{ data.bigtech_dependency }}</td>
                     <td>{{ data.co2_savings_kg_year }} kg/an</td>
@@ -113,8 +116,73 @@
 <script type="application/json" id="obsolescence-data">{{ obsolescence_data|safe }}</script>
 <script type="application/json" id="bigtech-data">{{ bigtech_data|safe }}</script>
 <script type="application/json" id="co2-savings-data">{{ co2_savings_data|safe }}</script>
+<script type="application/json" id="latest-data-source">
+[
+    {% for data in latest_data %}
+    {
+        "id": {{ data.id }},
+        "hardware_sensor_id": "{{ data.hardware_sensor_id }}",
+        "eco_score": {{ data.eco_score }},
+        "obsolescence_score": {{ data.obsolescence_score }},
+        "bigtech_dependency": {{ data.bigtech_dependency }},
+        "co2_savings_kg_year": {{ data.co2_savings_kg_year }},
+        "created_at": "{{ data.created_at|date:'Y-m-d\TH:i:s' }}",
+        "recommendations": {
+            "eco": "{{ data.recommendations.eco|default:''|escapejs }}",
+            "obsolescence": "{{ data.recommendations.obsolescence|default:''|escapejs }}",
+            "dependency": "{{ data.recommendations.dependency|default:''|escapejs }}"
+        }
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/scores.js' %}"></script>
+<script>
+    function showRecommendations(encodedRecs) {
+        try {
+            const recs = JSON.parse(decodeURIComponent(encodedRecs));
+
+            document.getElementById('rec-eco-content').textContent = recs.eco || 'Aucune recommandation disponible.';
+            document.getElementById('rec-obs-content').textContent = recs.obsolescence || 'Aucune recommandation disponible.';
+            document.getElementById('rec-dep-content').textContent = recs.dependency || 'Aucune recommandation disponible.';
+
+            new bootstrap.Modal(document.getElementById('recommendationsModal')).show();
+        } catch (e) {
+            console.error('Erreur affichage recommandations:', e);
+        }
+    }
+</script>
+
+<!-- Modal Recommandations -->
+<div class="modal fade" id="recommendationsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-clipboard-check me-2 text-primary"></i>Recommandations IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h6 class="text-success mb-2"><i class="fas fa-leaf me-2"></i>Impact Écologique</h6>
+                    <p class="text-light opacity-75 small" id="rec-eco-content">Chargement...</p>
+                </div>
+                <div class="mb-4">
+                    <h6 class="text-warning mb-2"><i class="fas fa-clock me-2"></i>Obsolescence</h6>
+                    <p class="text-light opacity-75 small" id="rec-obs-content">Chargement...</p>
+                </div>
+                <div>
+                    <h6 class="text-danger mb-2"><i class="fas fa-building me-2"></i>Dépendance Tech</h6>
+                    <p class="text-light opacity-75 small" id="rec-dep-content">Chargement...</p>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
