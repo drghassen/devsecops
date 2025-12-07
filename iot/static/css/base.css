@@ -1,0 +1,55 @@
+/* ==================== BASE STYLES ====================
+ * CSS Variables, Global Resets, Typography
+ * Consolidated from common.css and main.css
+ */
+
+/* CSS Variables */
+:root {
+    --primary: #4361ee;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --dark: #0f172a;
+    --light: #f8fafc;
+    --gray: #64748b;
+    --glass: rgba(255, 255, 255, 0.15);
+    --border: rgba(255, 255, 255, 0.2);
+}
+
+/* Global Resets */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    background-attachment: fixed;
+}
+
+/* Typography */
+.metric-big {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+    word-break: break-word;
+}
+
+.text-purple {
+    color: #a78bfa !important;
+}
+
+/* Utility Classes */
+.content-shift {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}

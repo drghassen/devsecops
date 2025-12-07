@@ -1,4 +1,27 @@
-/* Navigation et Sidebar */
+/* ==================== REUSABLE COMPONENTS ====================
+ * Glass Cards, Navbar, Tables, Badges, Buttons, Navigation
+ * Consolidated from common.css, old components.css, and dashboard.css
+ */
+
+/* Glass Card Design */
+.glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.glass-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Navbar */
 .navbar-custom {
     background: rgba(15, 23, 42, 0.7);
     backdrop-filter: blur(12px);
@@ -9,114 +32,21 @@
     z-index: 1000;
 }
 
-.brand { 
-    height:64px; 
-    display:flex; 
-    align-items:center; 
-    gap:10px; 
-    padding:0 14px; 
-}
-
-.brand .label{ 
-    opacity:0; 
-    transform: translateX(-8px); 
-    transition: all .2s ease; 
-    white-space: nowrap; 
-}
-
-.sidebar.expanded .brand .label{ 
-    opacity:1; 
-    transform:none; 
-}
-
-.nav-list { 
-    list-style:none; 
-    padding:8px; 
-    margin:0; 
-}
-
-.nav-item { 
-    border-radius:12px; 
-}
-
-.nav-link { 
-    display:flex; 
-    align-items:center; 
-    gap:12px; 
-    color:#e2e8f0; 
-    text-decoration:none; 
-    padding:12px 14px; 
-    border-radius:12px; 
-    transition: background .2s ease, transform .2s ease; 
-}
-
-.nav-link:hover { 
-    background: rgba(67,97,238,.18); 
-    transform: translateY(-1px); 
-}
-
-.nav-link .label{ 
-    opacity:0; 
-    transform: translateX(-8px); 
-    transition: all .2s ease; 
-    white-space: nowrap; 
-}
-
-.sidebar.expanded .nav-link .label{ 
-    opacity:1; 
-    transform:none; 
-}
-
-.sidebar-toggle{ 
-    position:absolute; 
-    top:14px; 
-    right:-14px; 
-    width:28px; 
-    height:28px; 
-    border-radius:50%; 
-    background: rgba(15,23,42,.9); 
-    border:1px solid rgba(255,255,255,.18); 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    cursor:pointer; 
-}
-
-/* Category buttons */
-.category-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 1rem 1.2rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-align: center;
+/* Chart Containers */
+.chart-container {
     position: relative;
-    overflow: hidden;
+    height: 250px;
+    width: 100%;
     max-width: 100%;
-    box-sizing: border-box;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 18px;
+    padding: 1.8rem;
+    border: 1px solid var(--border);
 }
 
-.category-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; 
-    left: -100%;
-    width: 100%; 
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    transition: 0.7s;
-}
-
-.category-btn:hover::before {
-    left: 100%;
-}
-
-.category-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--success));
-    color: white;
-    transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
+.chart-container canvas {
+    max-width: 100%;
+    height: auto !important;
 }
 
 /* Tables */
@@ -137,13 +67,13 @@
     font-weight: 700;
     border: 0;
     padding: 0.9rem 1rem;
-    letter-spacing: .2px;
+    letter-spacing: 0.2px;
     backdrop-filter: blur(8px);
 }
 
 .table-custom tbody tr {
     background: transparent;
-    transition: transform .2s ease, background-color .25s ease, box-shadow .25s ease;
+    transition: transform 0.2s ease, background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .table-custom tbody tr:nth-child(odd) {
@@ -165,31 +95,149 @@
 }
 
 /* Badges */
-.badge-eco, .badge {
+.badge,
+.badge-eco {
     border-radius: 999px;
-    padding: .3rem .6rem;
+    padding: 0.3rem 0.6rem;
     font-weight: 600;
-    font-size: .75rem;
+    font-size: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.badge.bg-success { 
-    background-color: rgba(16,185,129,0.18) !important; 
-    color: #34d399; 
+.badge.bg-success {
+    background-color: rgba(16, 185, 129, 0.18) !important;
+    color: #34d399;
 }
 
-.badge.bg-warning { 
-    background-color: rgba(245,158,11,0.18) !important; 
-    color: #fbbf24; 
+.badge.bg-warning {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+    color: #fbbf24;
 }
 
-.badge.bg-danger { 
-    background-color: rgba(239,68,68,0.18) !important; 
-    color: #f87171; 
+.badge.bg-danger {
+    background-color: rgba(239, 68, 68, 0.18) !important;
+    color: #f87171;
 }
 
-/* Styles pour les notifications lues */
+/* Brand and Navigation */
+.brand {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+}
+
+.brand .label {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sidebar.expanded .brand .label {
+    opacity: 1;
+    transform: none;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 8px;
+    margin: 0;
+}
+
+.nav-item {
+    border-radius: 12px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #e2e8f0;
+    text-decoration: none;
+    padding: 12px 14px;
+    border-radius: 12px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.nav-link:hover {
+    background: rgba(67, 97, 238, 0.18);
+    transform: translateY(-1px);
+}
+
+.nav-link .label {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sidebar.expanded .nav-link .label {
+    opacity: 1;
+    transform: none;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 14px;
+    right: -14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Category Buttons */
+.category-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.category-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: 0.7s;
+}
+
+.category-btn:hover::before {
+    left: 100%;
+}
+
+.category-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--success));
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
+}
+
+@media (max-width: 768px) {
+    .category-btn {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Notification Styles */
 .notification-item.read {
     opacity: 0.6;
 }
