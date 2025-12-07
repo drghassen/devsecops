@@ -1,5 +1,0 @@
-- [x] Réduire la taille de police de .metric-big de 2.8rem à 2.2rem
-- [x] Changer le padding des cartes de métriques de p-4 à p-3
-- [ ] Réduire le padding des boutons de catégories de 1.2rem 1.5rem à 1rem 1.2rem
-- [ ] Réduire le padding des conteneurs de graphiques de 1.8rem à 1.5rem
-- [ ] Réduire le padding des cellules du tableau de 0.75rem 1rem à 0.6rem 0.8rem

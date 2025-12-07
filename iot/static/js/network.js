@@ -45,9 +45,19 @@
 
     // Mettre à jour les moyennes depuis l'API
     function updateAveragesFromAPI(data) {
-        DOMUtils.updateText('avg-network-load', data.avg_network_load + ' Mbps');
-        DOMUtils.updateText('avg-requests', data.avg_requests);
-        DOMUtils.updateText('avg-cloud', data.avg_cloud + '%');
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateText('avg-network-load', data.avg_network_load + ' Mbps');
+            DOMUtils.updateText('avg-requests', data.avg_requests);
+            DOMUtils.updateText('avg-cloud', data.avg_cloud + '%');
+        } else {
+            // Fallback si utils.js n'est pas chargé
+            const networkEl = document.getElementById('avg-network-load');
+            const requestsEl = document.getElementById('avg-requests');
+            const cloudEl = document.getElementById('avg-cloud');
+            if (networkEl) networkEl.textContent = data.avg_network_load + ' Mbps';
+            if (requestsEl) requestsEl.textContent = data.avg_requests;
+            if (cloudEl) cloudEl.textContent = data.avg_cloud + '%';
+        }
     }
 
     // Créer les graphiques
@@ -147,30 +157,24 @@
         }
     }
 
-    // Rafraîchir les données depuis l'API
-    async function refreshNetworkData() {
-        try {
-            const response = await fetch('/api/network-data/');
-            if (response.ok) {
-                const data = await response.json();
+    // Traitement des données reçues via WebSocket
+    function processData(data) {
+        chartLabels = data.chart_labels || [];
+        networkLoadData = data.network_load_data || [];
+        requestsData = data.requests_data || [];
+        cloudDependencyData = data.cloud_dependency_data || [];
 
-                chartLabels = data.chart_labels || [];
-                networkLoadData = data.network_load_data || [];
-                requestsData = data.requests_data || [];
-                cloudDependencyData = data.cloud_dependency_data || [];
+        updateAveragesFromAPI(data);
+        initializeCharts();
+        updateTable(data.latest_data || []);
 
-                updateAveragesFromAPI(data);
-                initializeCharts();
-                updateTable(data.latest_data || []);
-
-                if (typeof DOMUtils !== 'undefined') {
-                    DOMUtils.updateLastUpdateTime();
-                } else {
-                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
-                }
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateLastUpdateTime();
+        } else {
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
             }
-        } catch (error) {
-            console.error('Erreur lors du rafraîchissement des données réseau:', error);
         }
     }
 
@@ -183,11 +187,34 @@
         if (typeof DOMUtils !== 'undefined') {
             DOMUtils.updateLastUpdateTime();
         } else {
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
+            }
         }
 
-        // Rafraîchissement automatique toutes les 1.5 secondes
-        setInterval(refreshNetworkData, 1500);
+        // Connexion WebSocket pour les données en temps réel
+        const wsClient = new IoTWebSocketClient('/ws/network/', {
+            onMessage: (data) => {
+                processData(data);
+            },
+            onOpen: () => {
+                console.log('WebSocket Network connecté');
+            },
+            onError: (error) => {
+                console.error('Erreur WebSocket Network:', error);
+            },
+            onClose: () => {
+                console.log('WebSocket Network déconnecté');
+            }
+        });
+
+        wsClient.connect();
+
+        // Nettoyer la connexion à la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            wsClient.disconnect();
+        });
     });
 })();
 

@@ -51,10 +51,22 @@
 
     // Mettre à jour les moyennes depuis l'API
     function updateAveragesFromAPI(data) {
-        DOMUtils.updateText('avg-cpu', data.avg_cpu + '%');
-        DOMUtils.updateText('avg-ram', data.avg_ram + '%');
-        DOMUtils.updateText('avg-battery', data.avg_battery + '%');
-        DOMUtils.updateText('avg-age', data.avg_age + ' ans');
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateText('avg-cpu', data.avg_cpu + '%');
+            DOMUtils.updateText('avg-ram', data.avg_ram + '%');
+            DOMUtils.updateText('avg-battery', data.avg_battery + '%');
+            DOMUtils.updateText('avg-age', data.avg_age + ' ans');
+        } else {
+            // Fallback si utils.js n'est pas chargé
+            const cpuEl = document.getElementById('avg-cpu');
+            const ramEl = document.getElementById('avg-ram');
+            const batteryEl = document.getElementById('avg-battery');
+            const ageEl = document.getElementById('avg-age');
+            if (cpuEl) cpuEl.textContent = data.avg_cpu + '%';
+            if (ramEl) ramEl.textContent = data.avg_ram + '%';
+            if (batteryEl) batteryEl.textContent = data.avg_battery + '%';
+            if (ageEl) ageEl.textContent = data.avg_age + ' ans';
+        }
     }
 
     // Créer les graphiques
@@ -150,31 +162,25 @@
         }
     }
 
-    // Rafraîchir les données depuis l'API
-    async function refreshHardwareData() {
-        try {
-            const response = await fetch('/api/hardware-data/');
-            if (response.ok) {
-                const data = await response.json();
+    // Traitement des données reçues via WebSocket
+    function processData(data) {
+        chartLabels = data.chart_labels || [];
+        cpuData = data.cpu_data || [];
+        ramData = data.ram_data || [];
+        batteryData = data.battery_data || [];
+        ageData = data.age_data || [];
 
-                chartLabels = data.chart_labels || [];
-                cpuData = data.cpu_data || [];
-                ramData = data.ram_data || [];
-                batteryData = data.battery_data || [];
-                ageData = data.age_data || [];
+        updateAveragesFromAPI(data);
+        initializeCharts();
+        updateTable(data.latest_data || []);
 
-                updateAveragesFromAPI(data);
-                initializeCharts();
-                updateTable(data.latest_data || []);
-
-                if (typeof DOMUtils !== 'undefined') {
-                    DOMUtils.updateLastUpdateTime();
-                } else {
-                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
-                }
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateLastUpdateTime();
+        } else {
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
             }
-        } catch (error) {
-            console.error('Erreur lors du rafraîchissement des données matérielles:', error);
         }
     }
 
@@ -187,10 +193,33 @@
         if (typeof DOMUtils !== 'undefined') {
             DOMUtils.updateLastUpdateTime();
         } else {
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
+            }
         }
 
-        // Rafraîchissement automatique toutes les 1.5 secondes
-        setInterval(refreshHardwareData, 1500);
+        // Connexion WebSocket pour les données en temps réel
+        const wsClient = new IoTWebSocketClient('/ws/hardware/', {
+            onMessage: (data) => {
+                processData(data);
+            },
+            onOpen: () => {
+                console.log('WebSocket Hardware connecté');
+            },
+            onError: (error) => {
+                console.error('Erreur WebSocket Hardware:', error);
+            },
+            onClose: () => {
+                console.log('WebSocket Hardware déconnecté');
+            }
+        });
+
+        wsClient.connect();
+
+        // Nettoyer la connexion à la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            wsClient.disconnect();
+        });
     });
 })();

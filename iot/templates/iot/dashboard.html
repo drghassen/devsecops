@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,8 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/common.css">
-    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
         .welcome-banner {
             position: relative;
@@ -252,9 +253,8 @@
         </div>
         <div class="chatbot-input-container">
             <input type="text" class="chatbot-input" id="chatbotInput" 
-                   placeholder="Posez votre question..." 
-                   onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button class="chatbot-send" id="chatbotSend" onclick="sendMessage()">
+                   placeholder="Posez votre question...">
+            <button class="chatbot-send" id="chatbotSend">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
@@ -502,494 +502,35 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/notification.js' %}"></script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
+    <script src="{% static 'js/websocket-client.js' %}"></script>
+    <!-- Données initiales depuis Django (format JSON pour éviter les erreurs de linter) -->
+    <script type="application/json" id="initial-dashboard-data">
+    {
+        "chart_labels": {{ chart_labels|safe }},
+        "cpu_data": {{ cpu_data|safe }},
+        "ram_data": {{ ram_data|safe }},
+        "power_data": {{ power_data|safe }},
+        "eco_data": {{ eco_data|safe }},
+        "co2_data": {{ co2_data|safe }},
+        "latest_data": [
+            {% for data in latest_data %}
+            {
+                "id": {{ data.id }},
+                "hardware_sensor_id": "{{ data.hardware_sensor_id }}",
+                "cpu_usage": {{ data.cpu_usage }},
+                "ram_usage": {{ data.ram_usage }},
+                "power_watts": {{ data.power_watts }},
+                "eco_score": {{ data.eco_score }},
+                "created_at": "{{ data.created_at|date:'Y-m-d\TH:i:s' }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+    </script>
     <script>
-        // ==================== SYSTÈME DE NOTIFICATIONS ====================
-        class NotificationSystem {
-            constructor() {
-                // Charger les notifications depuis localStorage
-                const stored = localStorage.getItem('iot-notifications');
-                if (stored) {
-                    this.notifications = JSON.parse(stored);
-                } else {
-                    this.notifications = [];
-                }
-               
-                this.maxMiniToasts = 3;
-                this.maxNotifications = 50;
-                this.miniToastDuration = 5000;
-               
-                // Cache pour éviter les doublons
-                this.notificationCache = new Map();
-                this.cacheDuration = 300000; // 5 minutes
-               
-                this.init();
-            }
-            init() {
-                this.updateNotificationBadge();
-                this.setupEventListeners();
-                this.renderStoredNotifications();
-                this.loadNotificationCache();
-            }
-            loadNotificationCache() {
-                const cached = localStorage.getItem('notification-cache');
-                if (cached) {
-                    try {
-                        const cacheData = JSON.parse(cached);
-                        const now = Date.now();
-                       
-                        for (const [key, timestamp] of Object.entries(cacheData)) {
-                            if (now - timestamp < this.cacheDuration) {
-                                this.notificationCache.set(key, timestamp);
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Erreur de chargement du cache:', e);
-                    }
-                }
-            }
-            saveNotificationCache() {
-                const cacheObj = Object.fromEntries(this.notificationCache);
-                localStorage.setItem('notification-cache', JSON.stringify(cacheObj));
-            }
-            shouldShowNotification(type, value) {
-                const cacheKey = `${type}-${Math.round(value)}`;
-                const now = Date.now();
-                const lastShown = this.notificationCache.get(cacheKey);
-               
-                if (lastShown && (now - lastShown < this.cacheDuration)) {
-                    return false;
-                }
-               
-                this.notificationCache.set(cacheKey, now);
-                this.saveNotificationCache();
-                return true;
-            }
-            cleanupNotificationCache() {
-                const now = Date.now();
-                for (const [key, timestamp] of this.notificationCache.entries()) {
-                    if (now - timestamp > this.cacheDuration) {
-                        this.notificationCache.delete(key);
-                    }
-                }
-                this.saveNotificationCache();
-            }
-            setupEventListeners() {
-                // Bouton de notification - rendu cliquable
-                const notificationBtn = document.getElementById('notificationBtn');
-                notificationBtn.style.cursor = 'pointer';
-               
-                notificationBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleNotificationsPanel();
-                });
-                // Bouton "Marquer tout comme lu"
-                document.getElementById('clearAllBtn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.markAllAsRead();
-                });
-                // Fermer le panneau en cliquant en dehors
-                document.addEventListener('click', (e) => {
-                    const panel = document.getElementById('notificationsPanel');
-                    const btn = document.getElementById('notificationBtn');
-                   
-                    if (panel.classList.contains('active') &&
-                        !panel.contains(e.target) &&
-                        !btn.contains(e.target)) {
-                        panel.classList.remove('active');
-                    }
-                });
-            }
-            addNotification(type, title, message, value = null) {
-                if (value !== null && !this.shouldShowNotification(type, value)) {
-                    console.log(`Notification "${title}" ignorée (déjà affichée récemment)`);
-                    return null;
-                }
-               
-                const id = Date.now();
-                const notification = {
-                    id,
-                    type,
-                    title,
-                    message,
-                    value,
-                    time: new Date().toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    timestamp: Date.now(),
-                    read: false
-                };
-                this.notifications.unshift(notification);
-                if (this.notifications.length > this.maxNotifications) {
-                    this.notifications = this.notifications.slice(0, this.maxNotifications);
-                }
-                this.saveNotifications();
-                this.updateNotificationBadge();
-                this.renderMiniToast(notification);
-                this.renderNotificationsList();
-                return notification;
-            }
-            renderMiniToast(notification) {
-                const container = document.getElementById('miniToastsContainer');
-               
-                const toast = document.createElement('div');
-                toast.className = `mini-toast ${notification.type}`;
-                toast.dataset.id = notification.id;
-               
-                toast.innerHTML = `
-                    <div class="mini-toast-content">
-                        <div class="mini-toast-icon">
-                            <i class="fas ${this.getIconForType(notification.type)}"></i>
-                        </div>
-                        <div class="mini-toast-text">
-                            <div class="mini-toast-title">${notification.title}</div>
-                            <div class="mini-toast-message">${notification.message}</div>
-                        </div>
-                        <div class="mini-toast-time">${notification.time}</div>
-                    </div>
-                `;
-                container.insertBefore(toast, container.firstChild);
-                const toasts = container.querySelectorAll('.mini-toast');
-                if (toasts.length > this.maxMiniToasts) {
-                    toasts[toasts.length - 1].remove();
-                }
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.style.opacity = '0';
-                        toast.style.transform = 'translateX(100%)';
-                        setTimeout(() => toast.remove(), 300);
-                    }
-                }, this.miniToastDuration);
-                toast.addEventListener('click', () => {
-                    this.markAsRead(notification.id);
-                    toast.remove();
-                });
-            }
-            renderStoredNotifications() {
-                // Afficher les mini-toasts pour les notifications non lues
-                const unreadNotifications = this.notifications
-                    .filter(n => !n.read)
-                    .slice(0, this.maxMiniToasts)
-                    .reverse();
-                unreadNotifications.forEach(notification => {
-                    this.renderMiniToast(notification);
-                });
-                // Mettre à jour la liste des notifications
-                this.renderNotificationsList();
-            }
-            renderNotificationsList() {
-                const list = document.getElementById('notificationsList');
-                const count = document.getElementById('notificationCount');
-               
-                // Afficher TOUTES les notifications
-                const allNotifications = this.notifications;
-               
-                // Mettre à jour le compteur avec le nombre total de notifications
-                count.textContent = allNotifications.length;
-               
-                // Afficher toutes les notifications, avec classe 'read' pour les lues
-                list.innerHTML = allNotifications.map(notification => `
-                    <div class="notification-item ${notification.type} ${notification.read ? 'read' : ''}" data-id="${notification.id}">
-                        <div class="notification-item-header">
-                            <div class="notification-item-title">
-                                <i class="fas ${this.getIconForType(notification.type)} me-2"></i>
-                                ${notification.title}
-                            </div>
-                            <div class="notification-item-time">${notification.time}</div>
-                        </div>
-                        <div class="notification-item-message">${notification.message}</div>
-                    </div>
-                `).join('');
-               
-                // Si aucune notification, afficher un message
-                if (allNotifications.length === 0) {
-                    list.innerHTML = `
-                        <div class="text-center py-5 opacity-50">
-                            <i class="fas fa-bell-slash fa-2x mb-3"></i>
-                            <p>Aucune notification</p>
-                        </div>
-                    `;
-                }
-               
-                // Ajouter les écouteurs d'événements
-                list.querySelectorAll('.notification-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        const id = parseInt(item.dataset.id);
-                        this.markAsRead(id);
-                       
-                        // Fermer le panneau après avoir cliqué sur une notification
-                        setTimeout(() => {
-                            this.toggleNotificationsPanel();
-                        }, 300);
-                    });
-                });
-            }
-            markAsRead(id) {
-                const notification = this.notifications.find(n => n.id === id);
-                if (notification) {
-                    notification.read = true;
-                    this.saveNotifications();
-                    this.updateNotificationBadge();
-                   
-                    // Re-rendre la liste pour appliquer la classe 'read'
-                    this.renderNotificationsList();
-                }
-            }
-            markAllAsRead() {
-                // Marquer toutes les notifications comme lues
-                this.notifications.forEach(notification => {
-                    notification.read = true;
-                });
-               
-                this.saveNotifications();
-                this.updateNotificationBadge();
-                this.renderNotificationsList();
-               
-                // Effacer également les mini-toasts
-                document.getElementById('miniToastsContainer').innerHTML = '';
-            }
-            updateNotificationBadge() {
-                const badge = document.getElementById('notificationBadge');
-                const btn = document.getElementById('notificationBtn');
-               
-                if (!badge || !btn) return;
-               
-                // Compter uniquement les notifications non lues
-                const unreadCount = this.notifications.filter(n => !n.read).length;
-               
-                if (unreadCount > 0) {
-                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                    badge.style.display = 'flex';
-                    btn.classList.add('has-notifications');
-                } else {
-                    badge.style.display = 'none';
-                    btn.classList.remove('has-notifications');
-                }
-            }
-            toggleNotificationsPanel() {
-                const panel = document.getElementById('notificationsPanel');
-                const isActive = panel.classList.contains('active');
-               
-                if (!isActive) {
-                    // Avant d'ouvrir, mettre à jour la liste pour afficher les dernières notifications
-                    this.renderNotificationsList();
-                }
-               
-                panel.classList.toggle('active');
-            }
-            getIconForType(type) {
-                switch(type) {
-                    case 'danger': return 'fa-exclamation-circle';
-                    case 'warning': return 'fa-triangle-exclamation';
-                    case 'info': return 'fa-info-circle';
-                    default: return 'fa-bell';
-                }
-            }
-            saveNotifications() {
-                // Sauvegarder dans localStorage
-                localStorage.setItem('iot-notifications', JSON.stringify(this.notifications));
-            }
-        }
-
-        // ==================== SYSTÈME DE CHATBOT ====================
-        class ChatbotSystem {
-            constructor() {
-                this.sessionId = this.generateSessionId();
-                this.messages = [];
-                this.apiUrl = 'http://37.59.116.54:8000/chat';
-                
-                this.init();
-            }
-
-            generateSessionId() {
-                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            }
-
-            init() {
-                this.setupEventListeners();
-                this.loadHistory();
-            }
-
-            setupEventListeners() {
-                // Bouton d'ouverture du chatbot
-                document.getElementById('chatbotBtn').addEventListener('click', () => {
-                    this.toggleChatbot();
-                });
-
-                // Bouton de fermeture du chatbot
-                document.getElementById('chatbotClose').addEventListener('click', () => {
-                    this.toggleChatbot();
-                });
-
-                // Bouton d'envoi
-                document.getElementById('chatbotSend').addEventListener('click', () => {
-                    this.sendMessage();
-                });
-
-                // Suggestion de questions
-                document.querySelectorAll('.suggestion-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const question = e.target.getAttribute('data-question');
-                        document.getElementById('chatbotInput').value = question;
-                        this.sendMessage();
-                    });
-                });
-
-                // Entrée pour envoyer le message
-                document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.sendMessage();
-                    }
-                });
-
-                // Fermer le chatbot en cliquant en dehors
-                document.addEventListener('click', (e) => {
-                    const container = document.getElementById('chatbotContainer');
-                    const btn = document.getElementById('chatbotBtn');
-                    
-                    if (container.classList.contains('active') && 
-                        !container.contains(e.target) && 
-                        !btn.contains(e.target)) {
-                        container.classList.remove('active');
-                    }
-                });
-            }
-
-            toggleChatbot() {
-                const container = document.getElementById('chatbotContainer');
-                container.classList.toggle('active');
-                
-                if (container.classList.contains('active')) {
-                    document.getElementById('chatbotInput').focus();
-                    this.scrollToBottom();
-                }
-            }
-
-            async sendMessage() {
-                const input = document.getElementById('chatbotInput');
-                const message = input.value.trim();
-                
-                if (!message) return;
-
-                // Ajouter le message de l'utilisateur
-                this.addMessage(message, 'user');
-                input.value = '';
-
-                // Afficher l'indicateur de frappe
-                const typingIndicator = this.showTypingIndicator();
-
-                try {
-                    // Envoyer la requête à l'API
-                    const response = await fetch(this.apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            session_id: this.sessionId,
-                            message: message
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // Supprimer l'indicateur de frappe
-                        typingIndicator.remove();
-                        
-                        // Ajouter la réponse du bot
-                        const botMessage = data.response || data.answer || "Désolé, je n'ai pas pu obtenir de réponse.";
-                        this.addMessage(botMessage, 'bot');
-                    } else {
-                        throw new Error('Erreur de réponse API');
-                    }
-                } catch (error) {
-                    console.error('Erreur chatbot:', error);
-                    
-                    // Supprimer l'indicateur de frappe
-                    typingIndicator.remove();
-                    
-                    // Afficher un message d'erreur
-                    this.addMessage("Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard.", 'bot');
-                }
-            }
-
-            addMessage(text, sender) {
-                const messagesContainer = document.getElementById('chatbotMessages');
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${sender}`;
-                messageDiv.textContent = text;
-                
-                messagesContainer.appendChild(messageDiv);
-                this.scrollToBottom();
-                
-                // Sauvegarder dans l'historique
-                this.messages.push({ text, sender, timestamp: new Date().toISOString() });
-                this.saveHistory();
-            }
-
-            showTypingIndicator() {
-                const messagesContainer = document.getElementById('chatbotMessages');
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'message bot typing';
-                typingDiv.textContent = "L'assistant IA réfléchit...";
-                typingDiv.id = 'typingIndicator';
-                
-                messagesContainer.appendChild(typingDiv);
-                this.scrollToBottom();
-                return typingDiv;
-            }
-
-            scrollToBottom() {
-                const messagesContainer = document.getElementById('chatbotMessages');
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-
-            saveHistory() {
-                localStorage.setItem('chatbot-history', JSON.stringify({
-                    sessionId: this.sessionId,
-                    messages: this.messages
-                }));
-            }
-
-            loadHistory() {
-                const stored = localStorage.getItem('chatbot-history');
-                if (stored) {
-                    try {
-                        const data = JSON.parse(stored);
-                        this.sessionId = data.sessionId;
-                        this.messages = data.messages;
-                        
-                        // Reconstruire l'interface
-                        this.rebuildChat();
-                    } catch (e) {
-                        console.error('Erreur de chargement de l\'historique:', e);
-                    }
-                }
-            }
-
-            rebuildChat() {
-                const messagesContainer = document.getElementById('chatbotMessages');
-                messagesContainer.innerHTML = '';
-                
-                // Ajouter le message de bienvenue
-                const welcomeMsg = document.createElement('div');
-                welcomeMsg.className = 'message bot';
-                welcomeMsg.textContent = 'Bonjour ! Je suis votre assistant IA EcoTrack. Comment puis-je vous aider aujourd\'hui ?';
-                messagesContainer.appendChild(welcomeMsg);
-                
-                // Ajouter les messages de l'historique
-                this.messages.forEach(msg => {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message ${msg.sender}`;
-                    messageDiv.textContent = msg.text;
-                    messagesContainer.appendChild(messageDiv);
-                });
-                
-                this.scrollToBottom();
-            }
-        }
-
         // ==================== DASHBOARD IoT ====================
         const notificationSystem = new NotificationSystem();
         const chatbotSystem = new ChatbotSystem();
@@ -1252,82 +793,94 @@
         function updateTime() {
             document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
         }
-        async function refreshData() {
-            try {
-                const res = await fetch('/api/api/dashboard-data/');
-                if (res.ok) {
-                    const data = await res.json();
-                    ({
-                        chart_labels: chartLabels,
-                        cpu_data: cpuData,
-                        ram_data: ramData,
-                        power_data: powerData,
-                        eco_data: ecoData,
-                        co2_data: co2Data,
-                        latest_data: latestData
-                    } = data);
-                   
-                    updateAverages();
-                    initCharts();
-                    updateTable();
-                    updateTime();
-                   
-                    if(latestData && latestData.length) {
-                        checkThresholds(latestData[0]);
-                    }
-                }
-            } catch (e) {
-                console.error('Erreur de rafraîchissement des données:', e);
+        // Traitement des données reçues via WebSocket
+        function processData(data) {
+            if (!data) return;
+            
+            // Mapper les données reçues
+            chartLabels = data.chart_labels || [];
+            cpuData = data.cpu_data || [];
+            ramData = data.ram_data || [];
+            powerData = data.power_data || [];
+            ecoData = data.eco_data || [];
+            co2Data = data.co2_data || [];
+            latestData = data.latest_data || [];
+           
+            updateAverages();
+            initCharts();
+            updateTable();
+            updateTime();
+           
+            if(latestData && latestData.length) {
+                checkThresholds(latestData[0]);
             }
         }
+        
+        // Charger les données initiales depuis le template Django
+        function loadInitialData() {
+            // Parser les données depuis l'élément script JSON
+            const dataElement = document.getElementById('initial-dashboard-data');
+            if (dataElement) {
+                try {
+                    const initialData = JSON.parse(dataElement.textContent);
+                    processData(initialData);
+                } catch (error) {
+                    console.error('Erreur lors du parsing des données initiales:', error);
+                }
+            }
+        }
+        
         // Nettoyage périodique du cache
         setInterval(() => {
             notificationSystem.cleanupNotificationCache();
         }, 60000);
-        // Rafraîchissement automatique
-        setInterval(refreshData, 1500);
-        refreshData();
-        // Navigation catégories
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const cat = btn.dataset.category;
-                if (cat) window.location.href = `/api/${cat}/`;
-            });
-        });
-        // Sidebar behavior
-        const sidebar = document.getElementById('sidebar');
-        const toggle = document.getElementById('sidebarToggle');
-       
-        function setExpanded(exp){
-            sidebar.classList.toggle('expanded', !!exp);
-            document.body.classList.toggle('sidebar-open', !!exp);
-        }
-       
-        let expanded = false;
-        toggle.addEventListener('click', () => {
-            expanded = !expanded;
-            setExpanded(expanded);
-        });
-       
-        if(window.innerWidth >= 992){
-            sidebar.addEventListener('mouseenter', () => { setExpanded(true); });
-            sidebar.addEventListener('mouseleave', () => { setExpanded(false); });
-        }
-       
-        window.addEventListener('resize', () => {
-            if(window.innerWidth < 992){
-                sidebar.removeEventListener('mouseenter', () => {});
-                sidebar.removeEventListener('mouseleave', () => {});
-                setExpanded(true);
-            } else {
-                sidebar.addEventListener('mouseenter', () => { setExpanded(true); });
-                sidebar.addEventListener('mouseleave', () => { setExpanded(false); });
+        
+        // Connexion WebSocket pour les données en temps réel
+        const wsClient = new IoTWebSocketClient('/ws/dashboard/', {
+            onMessage: (data) => {
+                processData(data);
+            },
+            onOpen: () => {
+                console.log('WebSocket Dashboard connecté');
+            },
+            onError: (error) => {
+                console.error('Erreur WebSocket Dashboard:', error);
+            },
+            onClose: () => {
+                console.log('WebSocket Dashboard déconnecté');
             }
         });
-       
-        if(window.innerWidth < 992){
-            setExpanded(true);
-        }
+
+        // Charger les données initiales au démarrage
+        loadInitialData();
+        
+        // Connexion WebSocket pour les mises à jour en temps réel
+        wsClient.connect();
+
+        // Nettoyer la connexion à la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            wsClient.disconnect();
+        });
+        // Navigation catégories
+        const categoryUrls = {
+            'hardware': '{% url "hardware" %}',
+            'energy': '{% url "energy" %}',
+            'network': '{% url "network" %}',
+            'scores': '{% url "scores" %}'
+        };
+        
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.style.cursor = 'pointer';
+            btn.addEventListener('click', () => {
+                const cat = btn.dataset.category;
+                if (cat && categoryUrls[cat]) {
+                    window.location.href = categoryUrls[cat];
+                }
+            });
+        });
+        
+        // Sidebar - Utiliser SidebarManager de utils.js
+        SidebarManager.init();
 
         // ==================== SYSTÈME DE SESSION PROFESSIONNEL ====================
         class ProfessionalAuthSystem {

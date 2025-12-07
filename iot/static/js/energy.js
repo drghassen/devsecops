@@ -51,10 +51,22 @@
 
     // Mettre à jour les moyennes depuis l'API
     function updateAveragesFromAPI(data) {
-        DOMUtils.updateText('avg-power', data.avg_power + ' W');
-        DOMUtils.updateText('avg-co2', data.avg_co2 + ' g');
-        DOMUtils.updateText('avg-overheating', data.avg_overheating + ' °C');
-        DOMUtils.updateText('avg-active', data.avg_active);
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateText('avg-power', data.avg_power + ' W');
+            DOMUtils.updateText('avg-co2', data.avg_co2 + ' g');
+            DOMUtils.updateText('avg-overheating', data.avg_overheating + ' °C');
+            DOMUtils.updateText('avg-active', data.avg_active);
+        } else {
+            // Fallback si utils.js n'est pas chargé
+            const powerEl = document.getElementById('avg-power');
+            const co2El = document.getElementById('avg-co2');
+            const overheatingEl = document.getElementById('avg-overheating');
+            const activeEl = document.getElementById('avg-active');
+            if (powerEl) powerEl.textContent = data.avg_power + ' W';
+            if (co2El) co2El.textContent = data.avg_co2 + ' g';
+            if (overheatingEl) overheatingEl.textContent = data.avg_overheating + ' °C';
+            if (activeEl) activeEl.textContent = data.avg_active;
+        }
     }
 
     // Créer les graphiques
@@ -175,31 +187,25 @@
         }
     }
 
-    // Rafraîchir les données depuis l'API
-    async function refreshEnergyData() {
-        try {
-            const response = await fetch('/api/energy-data/');
-            if (response.ok) {
-                const data = await response.json();
+    // Traitement des données reçues via WebSocket
+    function processData(data) {
+        chartLabels = data.chart_labels || [];
+        powerData = data.power_data || [];
+        co2Data = data.co2_data || [];
+        overheatingData = data.overheating_data || [];
+        activeDevicesData = data.active_devices_data || [];
 
-                chartLabels = data.chart_labels || [];
-                powerData = data.power_data || [];
-                co2Data = data.co2_data || [];
-                overheatingData = data.overheating_data || [];
-                activeDevicesData = data.active_devices_data || [];
+        updateAveragesFromAPI(data);
+        initializeCharts();
+        updateTable(data.latest_data || []);
 
-                updateAveragesFromAPI(data);
-                initializeCharts();
-                updateTable(data.latest_data || []);
-
-                if (typeof DOMUtils !== 'undefined') {
-                    DOMUtils.updateLastUpdateTime();
-                } else {
-                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
-                }
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateLastUpdateTime();
+        } else {
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
             }
-        } catch (error) {
-            console.error('Erreur lors du rafraîchissement des données énergétiques:', error);
         }
     }
 
@@ -212,10 +218,33 @@
         if (typeof DOMUtils !== 'undefined') {
             DOMUtils.updateLastUpdateTime();
         } else {
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
+            }
         }
 
-        // Rafraîchissement automatique toutes les 1.5 secondes
-        setInterval(refreshEnergyData, 1500);
+        // Connexion WebSocket pour les données en temps réel
+        const wsClient = new IoTWebSocketClient('/ws/energy/', {
+            onMessage: (data) => {
+                processData(data);
+            },
+            onOpen: () => {
+                console.log('WebSocket Energy connecté');
+            },
+            onError: (error) => {
+                console.error('Erreur WebSocket Energy:', error);
+            },
+            onClose: () => {
+                console.log('WebSocket Energy déconnecté');
+            }
+        });
+
+        wsClient.connect();
+
+        // Nettoyer la connexion à la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            wsClient.disconnect();
+        });
     });
 })();

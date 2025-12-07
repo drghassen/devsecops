@@ -51,10 +51,22 @@
 
     // Mettre à jour les moyennes depuis l'API
     function updateAveragesFromAPI(data) {
-        DOMUtils.updateText('avg-eco', data.avg_eco);
-        DOMUtils.updateText('avg-obsolescence', data.avg_obsolescence);
-        DOMUtils.updateText('avg-bigtech', data.avg_bigtech);
-        DOMUtils.updateText('avg-co2-savings', data.avg_co2_savings + ' kg');
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateText('avg-eco', data.avg_eco);
+            DOMUtils.updateText('avg-obsolescence', data.avg_obsolescence);
+            DOMUtils.updateText('avg-bigtech', data.avg_bigtech);
+            DOMUtils.updateText('avg-co2-savings', data.avg_co2_savings + ' kg');
+        } else {
+            // Fallback si utils.js n'est pas chargé
+            const ecoEl = document.getElementById('avg-eco');
+            const obsolescenceEl = document.getElementById('avg-obsolescence');
+            const bigtechEl = document.getElementById('avg-bigtech');
+            const co2SavingsEl = document.getElementById('avg-co2-savings');
+            if (ecoEl) ecoEl.textContent = data.avg_eco;
+            if (obsolescenceEl) obsolescenceEl.textContent = data.avg_obsolescence;
+            if (bigtechEl) bigtechEl.textContent = data.avg_bigtech;
+            if (co2SavingsEl) co2SavingsEl.textContent = data.avg_co2_savings + ' kg';
+        }
     }
 
     // Créer les graphiques
@@ -172,31 +184,25 @@
         }
     }
 
-    // Rafraîchir les données depuis l'API
-    async function refreshScoresData() {
-        try {
-            const response = await fetch('/api/scores-data/');
-            if (response.ok) {
-                const data = await response.json();
+    // Traitement des données reçues via WebSocket
+    function processData(data) {
+        chartLabels = data.chart_labels || [];
+        ecoData = data.eco_data || [];
+        obsolescenceData = data.obsolescence_data || [];
+        bigtechData = data.bigtech_data || [];
+        co2SavingsData = data.co2_savings_data || [];
 
-                chartLabels = data.chart_labels || [];
-                ecoData = data.eco_data || [];
-                obsolescenceData = data.obsolescence_data || [];
-                bigtechData = data.bigtech_data || [];
-                co2SavingsData = data.co2_savings_data || [];
+        updateAveragesFromAPI(data);
+        initializeCharts();
+        updateTable(data.latest_data || []);
 
-                updateAveragesFromAPI(data);
-                initializeCharts();
-                updateTable(data.latest_data || []);
-
-                if (typeof DOMUtils !== 'undefined') {
-                    DOMUtils.updateLastUpdateTime();
-                } else {
-                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
-                }
+        if (typeof DOMUtils !== 'undefined') {
+            DOMUtils.updateLastUpdateTime();
+        } else {
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
             }
-        } catch (error) {
-            console.error('Erreur lors du rafraîchissement des données de scores:', error);
         }
     }
 
@@ -209,10 +215,33 @@
         if (typeof DOMUtils !== 'undefined') {
             DOMUtils.updateLastUpdateTime();
         } else {
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+            const updateEl = document.getElementById('last-update');
+            if (updateEl) {
+                updateEl.textContent = new Date().toLocaleTimeString('fr-FR');
+            }
         }
 
-        // Rafraîchissement automatique toutes les 1.5 secondes
-        setInterval(refreshScoresData, 1500);
+        // Connexion WebSocket pour les données en temps réel
+        const wsClient = new IoTWebSocketClient('/ws/scores/', {
+            onMessage: (data) => {
+                processData(data);
+            },
+            onOpen: () => {
+                console.log('WebSocket Scores connecté');
+            },
+            onError: (error) => {
+                console.error('Erreur WebSocket Scores:', error);
+            },
+            onClose: () => {
+                console.log('WebSocket Scores déconnecté');
+            }
+        });
+
+        wsClient.connect();
+
+        // Nettoyer la connexion à la fermeture de la page
+        window.addEventListener('beforeunload', () => {
+            wsClient.disconnect();
+        });
     });
 })();

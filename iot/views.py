@@ -6,14 +6,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 import json
-from django.core.serializers.json import DjangoJSONEncoder
 from .models import IoTData
 
 
 # ==================== HELPER FUNCTIONS ====================
 
-def get_latest_data(limit=10):
-    """Récupère les dernières données IoT"""
+def get_latest_iot_data(limit=10):
+    """Récupère les dernières donnees IoT"""
     return IoTData.objects.order_by('-created_at')[:limit]
 
 
@@ -79,6 +78,38 @@ def iot_data_post(request):
             bigtech_dependency=data['bigtech_dependency'],
             co2_savings_kg_year=data['co2_savings_kg_year'],
         )
+        
+        # Envoyer les données mises à jour via WebSocket à tous les clients connectés
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        from . import data_utils
+        
+        channel_layer = get_channel_layer()
+        
+        # Envoyer les données mises à jour à tous les groupes
+        groups = ['dashboard_updates', 'hardware_updates', 'energy_updates', 'network_updates', 'scores_updates']
+        data_functions = {
+            'dashboard_updates': data_utils.get_dashboard_data_dict,
+            'hardware_updates': data_utils.get_hardware_data_dict,
+            'energy_updates': data_utils.get_energy_data_dict,
+            'network_updates': data_utils.get_network_data_dict,
+            'scores_updates': data_utils.get_scores_data_dict,
+        }
+        
+        for group in groups:
+            try:
+                data_dict = data_functions[group]()
+                async_to_sync(channel_layer.group_send)(
+                    group,
+                    {
+                        'type': 'data_update',
+                        'data': data_dict
+                    }
+                )
+            except Exception as e:
+                # Log l'erreur mais ne bloque pas la réponse
+                print(f"Erreur lors de l'envoi WebSocket au groupe {group}: {e}")
+        
         return JsonResponse({'message': 'IoT data created successfully', 'id': iot_data.id}, status=201)
     except KeyError as e:
         return JsonResponse({'error': f'Missing field: {str(e)}'}, status=400)
@@ -154,40 +185,8 @@ def get_latest_data(request):
 @require_http_methods(["GET"])
 def get_dashboard_data(request):
     try:
-        # Get latest 10 data entries
-        latest_data = IoTData.objects.order_by('-created_at')[:10]
-
-        # Prepare data for charts
-        labels = [str(data.created_at.strftime('%H:%M:%S')) for data in reversed(latest_data)]
-        cpu_data = [data.cpu_usage for data in reversed(latest_data)]
-        ram_data = [data.ram_usage for data in reversed(latest_data)]
-        power_data = [data.power_watts for data in reversed(latest_data)]
-        eco_data = [data.eco_score for data in reversed(latest_data)]
-        co2_data = [data.co2_equiv_g for data in reversed(latest_data)]
-
-        # Prepare data for table
-        table_data = [
-            {
-                'id': data.id,
-                'hardware_sensor_id': data.hardware_sensor_id,
-                'cpu_usage': data.cpu_usage,
-                'ram_usage': data.ram_usage,
-                'power_watts': data.power_watts,
-                'eco_score': data.eco_score,
-                'created_at': data.created_at.strftime('%d/%m/%Y %H:%M'),
-            } for data in latest_data
-        ]
-
-        data = {
-            'chart_labels': labels,
-            'cpu_data': cpu_data,
-            'ram_data': ram_data,
-            'power_data': power_data,
-            'eco_data': eco_data,
-            'co2_data': co2_data,
-            'latest_data': table_data,
-        }
-
+        from . import data_utils
+        data = data_utils.get_dashboard_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -285,43 +284,8 @@ def quiz_view(request):
 @require_http_methods(["GET"])
 def get_energy_data(request):
     try:
-        latest_data = get_latest_data(10)
-        all_data = IoTData.objects.all()
-        
-        # Calculer les moyennes
-        avg_fields = ['power_watts', 'co2_equiv_g', 'overheating', 'active_devices']
-        averages = calculate_averages(all_data, avg_fields)
-        
-        # Préparer les données pour les graphiques
-        field_mappings = {
-            'power_data': 'power_watts',
-            'co2_data': 'co2_equiv_g',
-            'overheating_data': 'overheating',
-            'active_devices_data': 'active_devices'
-        }
-        labels, chart_data = prepare_chart_data(latest_data, field_mappings)
-        
-        # Préparer les données pour le tableau
-        table_mapper = {
-            'id': 'id',
-            'energy_sensor_id': 'energy_sensor_id',
-            'power_watts': 'power_watts',
-            'co2_equiv_g': 'co2_equiv_g',
-            'overheating': 'overheating',
-            'active_devices': 'active_devices'
-        }
-        table_data = prepare_table_data(latest_data, table_mapper)
-        
-        data = {
-            'chart_labels': labels,
-            **chart_data,
-            'latest_data': table_data,
-            'avg_power': averages['power_watts'],
-            'avg_co2': averages['co2_equiv_g'],
-            'avg_overheating': averages['overheating'],
-            'avg_active': int(averages['active_devices']),
-        }
-        
+        from . import data_utils
+        data = data_utils.get_energy_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -329,40 +293,8 @@ def get_energy_data(request):
 @require_http_methods(["GET"])
 def get_network_data(request):
     try:
-        latest_data = get_latest_data(10)
-        all_data = IoTData.objects.all()
-        
-        # Calculer les moyennes
-        avg_fields = ['network_load_mbps', 'requests_per_min', 'cloud_dependency_score']
-        averages = calculate_averages(all_data, avg_fields)
-        
-        # Préparer les données pour les graphiques
-        field_mappings = {
-            'network_load_data': 'network_load_mbps',
-            'requests_data': 'requests_per_min',
-            'cloud_dependency_data': 'cloud_dependency_score'
-        }
-        labels, chart_data = prepare_chart_data(latest_data, field_mappings)
-        
-        # Préparer les données pour le tableau
-        table_mapper = {
-            'id': 'id',
-            'network_sensor_id': 'network_sensor_id',
-            'network_load_mbps': 'network_load_mbps',
-            'requests_per_min': 'requests_per_min',
-            'cloud_dependency_score': 'cloud_dependency_score'
-        }
-        table_data = prepare_table_data(latest_data, table_mapper)
-        
-        data = {
-            'chart_labels': labels,
-            **chart_data,
-            'latest_data': table_data,
-            'avg_network_load': averages['network_load_mbps'],
-            'avg_requests': int(averages['requests_per_min']),
-            'avg_cloud': averages['cloud_dependency_score'],
-        }
-        
+        from . import data_utils
+        data = data_utils.get_network_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -370,42 +302,8 @@ def get_network_data(request):
 @require_http_methods(["GET"])
 def get_scores_data(request):
     try:
-        latest_data = get_latest_data(10)
-        all_data = IoTData.objects.all()
-        
-        # Calculer les moyennes
-        avg_fields = ['eco_score', 'obsolescence_score', 'bigtech_dependency', 'co2_savings_kg_year']
-        averages = calculate_averages(all_data, avg_fields)
-        
-        # Préparer les données pour les graphiques
-        field_mappings = {
-            'eco_data': 'eco_score',
-            'obsolescence_data': 'obsolescence_score',
-            'bigtech_data': 'bigtech_dependency',
-            'co2_savings_data': 'co2_savings_kg_year'
-        }
-        labels, chart_data = prepare_chart_data(latest_data, field_mappings)
-        
-        # Préparer les données pour le tableau
-        table_mapper = {
-            'id': 'id',
-            'eco_score': 'eco_score',
-            'obsolescence_score': 'obsolescence_score',
-            'bigtech_dependency': 'bigtech_dependency',
-            'co2_savings_kg_year': 'co2_savings_kg_year'
-        }
-        table_data = prepare_table_data(latest_data, table_mapper)
-        
-        data = {
-            'chart_labels': labels,
-            **chart_data,
-            'latest_data': table_data,
-            'avg_eco': averages['eco_score'],
-            'avg_obsolescence': averages['obsolescence_score'],
-            'avg_bigtech': averages['bigtech_dependency'],
-            'avg_co2_savings': averages['co2_savings_kg_year'],
-        }
-        
+        from . import data_utils
+        data = data_utils.get_scores_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -413,43 +311,8 @@ def get_scores_data(request):
 @require_http_methods(["GET"])
 def get_hardware_data(request):
     try:
-        latest_data = get_latest_data(10)
-        all_data = IoTData.objects.all()
-        
-        # Calculer les moyennes
-        avg_fields = ['cpu_usage', 'ram_usage', 'battery_health', 'age_years']
-        averages = calculate_averages(all_data, avg_fields)
-        
-        # Préparer les données pour les graphiques
-        field_mappings = {
-            'cpu_data': 'cpu_usage',
-            'ram_data': 'ram_usage',
-            'battery_data': 'battery_health',
-            'age_data': 'age_years'
-        }
-        labels, chart_data = prepare_chart_data(latest_data, field_mappings)
-        
-        # Préparer les données pour le tableau
-        table_mapper = {
-            'id': 'id',
-            'hardware_sensor_id': 'hardware_sensor_id',
-            'cpu_usage': 'cpu_usage',
-            'ram_usage': 'ram_usage',
-            'battery_health': 'battery_health',
-            'age_years': 'age_years'
-        }
-        table_data = prepare_table_data(latest_data, table_mapper)
-        
-        data = {
-            'chart_labels': labels,
-            **chart_data,
-            'latest_data': table_data,
-            'avg_cpu': averages['cpu_usage'],
-            'avg_ram': averages['ram_usage'],
-            'avg_battery': averages['battery_health'],
-            'avg_age': averages['age_years'],
-        }
-        
+        from . import data_utils
+        data = data_utils.get_hardware_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
