@@ -3,60 +3,99 @@
  * ECOTRACK IOT - AUTH SYSTEM
  * ============================================================================
  * Professional authentication and session management system
- * Handles session timeout, activity tracking, and user security
+ * Synchronized with Django's session management via API
  */
 
 class ProfessionalAuthSystem {
     constructor() {
-        this.sessionStartTime = Date.now();
-        this.sessionDuration = 30 * 60 * 1000; // 30 minutes
-        this.warningTime = 5 * 60 * 1000; // 5 minutes warning
-        this.checkInterval = 60 * 1000; // Check every minute
+        this.sessionDuration = 30 * 60; // Default 30 minutes (will be updated from server)
+        this.warningTime = 5 * 60; // 5 minutes warning
+        this.remainingSeconds = this.sessionDuration;
+        this.checkInterval = 60 * 1000; // Check session status every minute
+        this.countdownInterval = null;
+        this.isInitialized = false;
 
         this.init();
     }
 
-    init() {
-        this.updateSessionDisplay();
+    async init() {
+        // Fetch initial session info from server
+        await this.syncWithServer();
+
+        // Start the countdown timer
         this.startSessionTimer();
+
+        // Setup activity tracking
         this.setupEventListeners();
+
+        // Update display
+        this.updateSessionDisplay();
+
+        this.isInitialized = true;
+    }
+
+    async syncWithServer() {
+        try {
+            const response = await fetch('/api/session-info/', {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                this.handleSessionExpiry();
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                this.sessionDuration = data.session_duration;
+                this.remainingSeconds = data.remaining_seconds;
+                this.username = data.username;
+
+                // Update session start display
+                const sessionStartEl = document.getElementById('sessionStart');
+                if (sessionStartEl) {
+                    const startDate = new Date(data.session_start * 1000);
+                    sessionStartEl.textContent = startDate.toLocaleTimeString('fr-FR');
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to sync session with server:', error);
+        }
     }
 
     updateSessionDisplay() {
-        const now = new Date();
-        const sessionStartEl = document.getElementById('sessionStart');
-        if (sessionStartEl) {
-            sessionStartEl.textContent = now.toLocaleTimeString('fr-FR');
-        }
         this.updateCountdown();
     }
 
     updateCountdown() {
-        const elapsed = Date.now() - this.sessionStartTime;
-        const remaining = Math.max(0, this.sessionDuration - elapsed);
-
-        const minutes = Math.floor(remaining / (60 * 1000));
-        const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+        const minutes = Math.floor(this.remainingSeconds / 60);
+        const seconds = this.remainingSeconds % 60;
 
         const countdownElement = document.getElementById('sessionCountdown');
         if (countdownElement) {
             countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
             // Change color based on remaining time
-            if (remaining <= this.warningTime) {
+            if (this.remainingSeconds <= this.warningTime) {
                 countdownElement.style.color = '#ef4444';
                 if (countdownElement.previousElementSibling) {
                     countdownElement.previousElementSibling.style.color = '#ef4444';
                 }
-            } else if (remaining <= 10 * 60 * 1000) { // 10 minutes
+            } else if (this.remainingSeconds <= 10 * 60) { // 10 minutes
                 countdownElement.style.color = '#f59e0b';
                 if (countdownElement.previousElementSibling) {
                     countdownElement.previousElementSibling.style.color = '#f59e0b';
                 }
+            } else {
+                countdownElement.style.color = '';
+                if (countdownElement.previousElementSibling) {
+                    countdownElement.previousElementSibling.style.color = '';
+                }
             }
 
             // Auto expiration
-            if (remaining <= 0) {
+            if (this.remainingSeconds <= 0) {
                 this.handleSessionExpiry();
             }
         }
@@ -64,32 +103,24 @@ class ProfessionalAuthSystem {
 
     startSessionTimer() {
         // Update countdown every second
-        setInterval(() => {
+        this.countdownInterval = setInterval(() => {
+            if (this.remainingSeconds > 0) {
+                this.remainingSeconds--;
+            }
             this.updateCountdown();
         }, 1000);
 
-        // Check session status periodically
+        // Sync with server periodically
         setInterval(() => {
-            this.checkSessionStatus();
+            this.syncWithServer();
         }, this.checkInterval);
     }
 
-    async checkSessionStatus() {
-        try {
-            const response = await fetch('/api/dashboard/', {
-                method: 'HEAD',
-                credentials: 'same-origin'
-            });
-
-            if (response.status === 401 || response.status === 403) {
-                this.handleSessionExpiry();
-            }
-        } catch (error) {
-            console.warn('Session verification error:', error);
-        }
-    }
-
     handleSessionExpiry() {
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+        }
+
         // Show expiration notification
         if (typeof notificationSystem !== 'undefined') {
             notificationSystem.addNotification(
@@ -109,25 +140,44 @@ class ProfessionalAuthSystem {
     setupEventListeners() {
         // User activity to extend session
         let activityTimeout;
-        const resetActivityTimeout = () => {
+        let lastExtendTime = 0;
+        const EXTEND_COOLDOWN = 60 * 1000; // Only extend once per minute
+
+        const handleActivity = async () => {
             clearTimeout(activityTimeout);
-            activityTimeout = setTimeout(() => {
-                this.extendSession();
-            }, 30000); // Reset after 30 seconds of inactivity
+
+            const now = Date.now();
+            if (now - lastExtendTime > EXTEND_COOLDOWN) {
+                activityTimeout = setTimeout(async () => {
+                    await this.extendSession();
+                    lastExtendTime = Date.now();
+                }, 5000); // Wait 5 seconds of activity before extending
+            }
         };
 
         ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetActivityTimeout, true);
+            document.addEventListener(event, handleActivity, { passive: true });
         });
-
-        resetActivityTimeout(); // Initialize
     }
 
-    extendSession() {
-        // Could make an AJAX call to extend session server-side
-        console.log('Session extended by user activity');
-        // Uncomment to actually extend session:
-        // fetch('/api/extend-session/', { method: 'POST', credentials: 'same-origin' });
+    async extendSession() {
+        try {
+            const response = await fetch('/api/extend-session/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Sync with server to get updated remaining time
+                await this.syncWithServer();
+                console.log('Session extended successfully');
+            }
+        } catch (error) {
+            console.warn('Failed to extend session:', error);
+        }
     }
 }
 

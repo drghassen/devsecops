@@ -201,3 +201,60 @@ def get_history_data(request):
         return JsonResponse({'error': 'Invalid page or limit parameter'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def get_session_info(request):
+    """
+    Get session information including expiry time.
+    Used to synchronize client-side session timer with Django's session.
+    """
+    from django.conf import settings
+    import time
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({'authenticated': False}, status=401)
+    
+    # Get session expiry settings
+    session_cookie_age = getattr(settings, 'SESSION_COOKIE_AGE', 1800)  # Default 30 min
+    
+    # Get or set session start time
+    if 'session_start_time' not in request.session:
+        request.session['session_start_time'] = time.time()
+    
+    session_start = request.session['session_start_time']
+    current_time = time.time()
+    elapsed = current_time - session_start
+    remaining = max(0, session_cookie_age - elapsed)
+    
+    # Update last activity
+    request.session['last_activity'] = current_time
+    
+    return JsonResponse({
+        'authenticated': True,
+        'username': request.user.username,
+        'session_start': session_start,
+        'session_duration': session_cookie_age,
+        'elapsed_seconds': int(elapsed),
+        'remaining_seconds': int(remaining),
+        'server_time': current_time
+    }, status=200)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def extend_session(request):
+    """
+    Extend the session by resetting the session start time.
+    Called when user is active.
+    """
+    import time
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    
+    # Reset session start time
+    request.session['session_start_time'] = time.time()
+    request.session['last_activity'] = time.time()
+    
+    return JsonResponse({'message': 'Session extended', 'success': True}, status=200)

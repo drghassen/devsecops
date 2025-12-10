@@ -19,4 +19,7 @@ urlpatterns = [
     path('api/network/', views.get_network_data, name='api_network'),
     path('api/scores/', views.get_scores_data, name='api_scores'),
     path('history/', views.get_history_data, name='api_history'),
+    # Session management APIs
+    path('api/session-info/', views.get_session_info, name='api_session_info'),
+    path('api/extend-session/', views.extend_session, name='api_extend_session'),
 ]

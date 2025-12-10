@@ -21,7 +21,9 @@ from .api_views import (
     get_energy_data,
     get_network_data,
     get_scores_data,
-    get_history_data
+    get_history_data,
+    get_session_info,
+    extend_session
 )
 
 __all__ = [
@@ -44,4 +46,6 @@ __all__ = [
     'get_network_data',
     'get_scores_data',
     'get_history_data',
+    'get_session_info',
+    'extend_session',
 ]
