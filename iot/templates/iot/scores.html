@@ -99,10 +99,17 @@
                     <td>{{ data.bigtech_dependency }}</td>
                     <td>{{ data.co2_savings_kg_year }} kg/an</td>
                     <td>{{ data.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"
+                            onclick="showRecommendations('{{ data.recommendations|escapejs }}')"
+                            title="Voir les recommandations">
+                            <i class="fas fa-lightbulb"></i>
+                        </button>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center py-5 opacity-50">Aucune donnée disponible</td>
+                    <td colspan="8" class="text-center py-5 opacity-50">Aucune donnée disponible</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -139,11 +146,30 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/scores.js' %}"></script>
+<script src="{% static 'js/scores.js' %}?v=2.0"></script>
 <script>
-    function showRecommendations(encodedRecs) {
+    function showRecommendations(recsData) {
         try {
-            const recs = JSON.parse(decodeURIComponent(encodedRecs));
+            let recs;
+
+            // Handle different input formats
+            if (typeof recsData === 'string') {
+                // Try to decode if it's URL-encoded (from JS dynamic render)
+                try {
+                    recs = JSON.parse(decodeURIComponent(recsData));
+                } catch {
+                    // Try to parse Python dict format from Django template
+                    // Convert Python dict format to JSON: {'key': 'value'} -> {"key": "value"}
+                    const fixed = recsData
+                        .replace(/'/g, '"')
+                        .replace(/None/g, 'null')
+                        .replace(/True/g, 'true')
+                        .replace(/False/g, 'false');
+                    recs = JSON.parse(fixed);
+                }
+            } else {
+                recs = recsData;
+            }
 
             document.getElementById('rec-eco-content').textContent = recs.eco || 'Aucune recommandation disponible.';
             document.getElementById('rec-obs-content').textContent = recs.obsolescence || 'Aucune recommandation disponible.';
@@ -151,7 +177,12 @@
 
             new bootstrap.Modal(document.getElementById('recommendationsModal')).show();
         } catch (e) {
-            console.error('Erreur affichage recommandations:', e);
+            console.error('Erreur affichage recommandations:', e, 'Data:', recsData);
+            // Show error in modal
+            document.getElementById('rec-eco-content').textContent = 'Erreur de chargement';
+            document.getElementById('rec-obs-content').textContent = 'Erreur de chargement';
+            document.getElementById('rec-dep-content').textContent = 'Erreur de chargement';
+            new bootstrap.Modal(document.getElementById('recommendationsModal')).show();
         }
     }
 </script>

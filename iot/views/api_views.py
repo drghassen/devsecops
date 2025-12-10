@@ -18,30 +18,50 @@ def iot_data_post(request):
     try:
         data = json.loads(request.body)
         
-        # Extract scores data (handle nested structure)
+        # DEBUG: Log incoming data structure
+        print("=" * 50)
+        print("API INCOMING DATA:")
+        print(f"Keys at root: {list(data.keys())}")
+        
+        # Extract nested data structures (from Node-RED format)
+        # Support both nested format and flat format for backwards compatibility
+        hardware_data = data.get('hardware', data)
+        energy_data = data.get('energy', data)
+        network_data = data.get('network', data)
         scores_data = data.get('scores', data)
+        
+        # DEBUG: Log scores data
+        print(f"scores_data type: {type(scores_data)}")
+        print(f"scores_data keys: {list(scores_data.keys()) if isinstance(scores_data, dict) else 'N/A'}")
+        print(f"recommendations: {scores_data.get('recommendations', 'NOT FOUND')}")
+        print("=" * 50)
         
         # Create new IoT data record
         iot_data = IoTData.objects.create(
-            hardware_sensor_id=data['hardware_sensor_id'],
-            hardware_timestamp=data['hardware_timestamp'],
-            age_years=data['age_years'],
-            cpu_usage=data['cpu_usage'],
-            ram_usage=data['ram_usage'],
-            battery_health=data['battery_health'],
-            os=data['os'],
-            win11_compat=data['win11_compat'],
-            energy_sensor_id=data['energy_sensor_id'],
-            energy_timestamp=data['energy_timestamp'],
-            power_watts=data['power_watts'],
-            active_devices=data['active_devices'],
-            overheating=data['overheating'],
-            co2_equiv_g=data['co2_equiv_g'],
-            network_sensor_id=data['network_sensor_id'],
-            network_timestamp=data['network_timestamp'],
-            network_load_mbps=data['network_load_mbps'],
-            requests_per_min=data['requests_per_min'],
-            cloud_dependency_score=data['cloud_dependency_score'],
+            # Hardware fields - try nested first, then root
+            hardware_sensor_id=hardware_data.get('sensor_id', data.get('hardware_sensor_id', 'unknown')),
+            hardware_timestamp=hardware_data.get('timestamp', data.get('hardware_timestamp', 0)),
+            age_years=hardware_data.get('age_years', data.get('age_years', 0)),
+            cpu_usage=hardware_data.get('cpu_usage', data.get('cpu_usage', 0)),
+            ram_usage=hardware_data.get('ram_usage', data.get('ram_usage', 0)),
+            battery_health=hardware_data.get('battery_health', data.get('battery_health', 0)),
+            os=hardware_data.get('os', data.get('os', 'unknown')),
+            win11_compat=hardware_data.get('win11_compat', data.get('win11_compat', False)),
+            
+            # Energy fields
+            energy_sensor_id=energy_data.get('sensor_id', data.get('energy_sensor_id', 'unknown')),
+            energy_timestamp=energy_data.get('timestamp', data.get('energy_timestamp', 0)),
+            power_watts=energy_data.get('power_watts', data.get('power_watts', 0)),
+            active_devices=energy_data.get('active_devices', data.get('active_devices', 0)),
+            overheating=energy_data.get('overheating', data.get('overheating', 0)),
+            co2_equiv_g=energy_data.get('co2_equiv_g', data.get('co2_equiv_g', 0)),
+            
+            # Network fields
+            network_sensor_id=network_data.get('sensor_id', data.get('network_sensor_id', 'unknown')),
+            network_timestamp=network_data.get('timestamp', data.get('network_timestamp', 0)),
+            network_load_mbps=network_data.get('network_load_mbps', data.get('network_load_mbps', 0)),
+            requests_per_min=network_data.get('requests_per_min', data.get('requests_per_min', 0)),
+            cloud_dependency_score=network_data.get('cloud_dependency_score', data.get('cloud_dependency_score', 0)),
             
             # Scores from nested object or root
             eco_score=scores_data.get('eco_score', 0),
