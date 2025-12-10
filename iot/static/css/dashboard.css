@@ -13,11 +13,11 @@
     left: 0;
     height: 100vh;
     width: 110px;
-    background: rgba(15,23,42,.7);
+    background: rgba(15, 23, 42, .7);
     backdrop-filter: blur(14px);
-    border-right: 1px solid rgba(255,255,255,.12);
+    border-right: 1px solid rgba(255, 255, 255, .12);
     z-index: 1029;
-    transition: width .25s ease;
+    transition: width .15s ease;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -54,7 +54,11 @@ body.sidebar-open .main-content-wrapper {
     margin-right: -15px;
 }
 
-.col-md-3, .col-lg-3, .col-md-6, .col-lg-6, .col-12 {
+.col-md-3,
+.col-lg-3,
+.col-md-6,
+.col-lg-6,
+.col-12 {
     padding-left: 15px;
     padding-right: 15px;
 }
@@ -69,13 +73,27 @@ body.sidebar-open .main-content-wrapper {
 
 /* Animations */
 @keyframes pulse {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }
 
 @keyframes pulse-notif {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
 }
 
 .pulse {
@@ -113,116 +131,8 @@ body.sidebar-open .main-content-wrapper {
     }
 }
 
-/* Navigation et Sidebar spécifiques */
-.brand {
-    height:64px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:0 14px;
-}
 
-.brand .label{
-    opacity:0;
-    transform: translateX(-8px);
-    transition: all .2s ease;
-    white-space: nowrap;
-}
-
-.sidebar.expanded .brand .label{
-    opacity:1;
-    transform:none;
-}
-
-.nav-list {
-    list-style:none;
-    padding:8px;
-    margin:0;
-}
-
-.nav-item {
-    border-radius:12px;
-}
-
-.nav-link {
-    display:flex;
-    align-items:center;
-    gap:12px;
-    color:#e2e8f0;
-    text-decoration:none;
-    padding:12px 14px;
-    border-radius:12px;
-    transition: background .2s ease, transform .2s ease;
-}
-
-.nav-link:hover {
-    background: rgba(67,97,238,.18);
-    transform: translateY(-1px);
-}
-
-.nav-link .label{
-    opacity:0;
-    transform: translateX(-8px);
-    transition: all .2s ease;
-    white-space: nowrap;
-}
-
-.sidebar.expanded .nav-link .label{
-    opacity:1;
-    transform:none;
-}
-
-.sidebar-toggle{
-    position:absolute;
-    top:14px;
-    right:-14px;
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    background: rgba(15,23,42,.9);
-    border:1px solid rgba(255,255,255,.18);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-}
-
-/* Category buttons */
-.category-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 1rem 1.2rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-.category-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    transition: 0.7s;
-}
-
-.category-btn:hover::before {
-    left: 100%;
-}
-
-.category-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--success));
-    color: white;
-    transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
-}
+/* Navigation and Sidebar styles are imported from components.css */
 
 /* Boutons de notification et chatbot */
 .notification-btn-navbar {
@@ -460,6 +370,17 @@ body.sidebar-open .main-content-wrapper {
     flex: 1;
     overflow-y: auto;
     padding: 0.5rem;
+    scrollbar-width: none !important;
+    /* Firefox */
+    -ms-overflow-style: none !important;
+    /* IE and Edge */
+}
+
+.notifications-list::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
 }
 
 .notification-item {
@@ -597,6 +518,14 @@ body.sidebar-open .main-content-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.chatbot-messages::-webkit-scrollbar {
+    display: none;
 }
 
 .message {
@@ -701,5 +630,5 @@ body.sidebar-open .main-content-wrapper {
         right: 10px;
     }
 
-    
+
 }

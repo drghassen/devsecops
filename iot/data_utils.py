@@ -237,3 +237,41 @@ def get_scores_data_dict():
         'avg_co2_savings': averages['co2_savings_kg_year'],
     }
 
+
+def serialize_iot_data(data):
+    """
+    Serializes a single IoTData instance into a dictionary.
+    Used for API responses and WebSocket updates.
+    """
+    if not data:
+        return None
+        
+    return {
+        'id': data.id,
+        'hardware_sensor_id': data.hardware_sensor_id,
+        'hardware_timestamp': data.hardware_timestamp,
+        'age_years': data.age_years,
+        'cpu_usage': data.cpu_usage,
+        'ram_usage': data.ram_usage,
+        'battery_health': data.battery_health,
+        'os': data.os,
+        'win11_compat': data.win11_compat,
+        'energy_sensor_id': data.energy_sensor_id,
+        'energy_timestamp': data.energy_timestamp,
+        'power_watts': data.power_watts,
+        'active_devices': data.active_devices,
+        'overheating': data.overheating,
+        'co2_equiv_g': data.co2_equiv_g,
+        'network_sensor_id': data.network_sensor_id,
+        'network_timestamp': data.network_timestamp,
+        'network_load_mbps': data.network_load_mbps,
+        'requests_per_min': data.requests_per_min,
+        'cloud_dependency_score': data.cloud_dependency_score,
+        'eco_score': data.eco_score,
+        'obsolescence_score': data.obsolescence_score,
+        'bigtech_dependency': data.bigtech_dependency,
+        'co2_savings_kg_year': data.co2_savings_kg_year,
+        'recommendations': data.recommendations,
+        'created_at': data.created_at.isoformat(),
+    }
+

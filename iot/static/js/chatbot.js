@@ -22,7 +22,8 @@ class ChatbotSystem {
         const chatbotSend = document.getElementById('chatbotSend');
         const chatbotInput = document.getElementById('chatbotInput');
         if (chatbotBtn) {
-            chatbotBtn.addEventListener('click', () => {
+            chatbotBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 console.log('Chatbot button clicked');
                 this.toggleChatbot();
             });

@@ -72,12 +72,12 @@
             });
         }
 
-        init() {
-            super.init();
-            this.loadInitialTableData();
-        }
+        /**
+         * Override loadInitialData to handle the specific table data source in scores.html
+         */
+        loadInitialData() {
+            super.loadInitialData(); // Load chart data
 
-        loadInitialTableData() {
             try {
                 const el = document.getElementById('latest-data-source');
                 if (el) {
@@ -85,7 +85,7 @@
                     this.updateTable(data);
                 }
             } catch (e) {
-                console.error('Erreur chargement données initiales table:', e);
+                console.error('Scores: Error loading initial table data', e);
             }
         }
     }
