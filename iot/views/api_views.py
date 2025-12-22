@@ -384,7 +384,7 @@ def submit_quiz_result(request):
         # Save result
         user = request.user if request.user.is_authenticated else None
 
-        result = QuizResult.objects.create(user=user, score=score, total_questions=total, percentage=percentage)
+        QuizResult.objects.create(user=user, score=score, total_questions=total, percentage=percentage)
 
         # Find appropriate result message
         result_msg = QuizResultMessage.objects.filter(min_percentage__lte=percentage).order_by("-min_percentage").first()

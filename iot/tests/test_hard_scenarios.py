@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from iot.models import QuizQuestion, QuizResult, QuizFact, QuizMood, QuizResultMessage, SystemSetting, IoTData
+from iot.models import QuizQuestion, QuizResult, QuizResultMessage, SystemSetting, IoTData
 import json
 from unittest.mock import patch, Mock
 import requests
