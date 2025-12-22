@@ -3,7 +3,7 @@
 # ============================================================================
 
 # Core Django & Production Server
-Django==5.2.7
+Django==5.2.8
 daphne==4.1.0
 
 # WebSocket Support
