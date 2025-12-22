@@ -17,3 +17,4 @@ django-ratelimit==4.1.0
 
 # HTTP Client (for chatbot proxy)
 requests==2.31.0
+whitenoise==6.7.0

@@ -22,13 +22,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app/
 
-# Create a non-root user and switch to it
+# Create a non-root user
 RUN addgroup --system django && adduser --system --group django
+
+# Pre-create directories and set permissions
+# We do this as root before switching USER
+RUN mkdir -p /app/staticfiles /app/media /app/logs
 RUN chown -R django:django /app
-USER django
 
 # Expose port
 EXPOSE 8000
+
+# Switch to non-root user
+USER django
 
 # Run the application using daphne (for ASGI support)
 CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "nuit_info.asgi:application"]

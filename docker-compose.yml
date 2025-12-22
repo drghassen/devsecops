@@ -14,7 +14,9 @@ services:
       - .env
     environment:
       - DEBUG=True
-    command: daphne -b 0.0.0.0 -p 8000 nuit_info.asgi:application
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 nuit_info.asgi:application"
     restart: unless-stopped
 
 volumes:
