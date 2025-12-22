@@ -100,14 +100,14 @@ class IoTDataSimulator:
 
     def run_simulation(self, count=10, interval=2, verbose=True):
         """Lance la simulation"""
-        print(f"\n{'='*70}")
-        print(f"🚀 ECOTRACK IOT - SIMULATEUR DE DONNÉES TEMPS RÉEL")
-        print(f"{'='*70}")
+        print(f"\n{'=' * 70}")
+        print("🚀 ECOTRACK IOT - SIMULATEUR DE DONNÉES TEMPS RÉEL")
+        print(f"{'=' * 70}")
         print(f"📡 URL API: {self.api_url}")
         print(f"🔧 Sensor ID: {self.sensor_id}")
         print(f"📊 Nombre d'envois: {count}")
         print(f"⏱️  Intervalle: {interval}s")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
         start_time = time.time()
 
@@ -125,7 +125,7 @@ class IoTDataSimulator:
                 status_icon = "✅" if success else "❌"
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 print(
-                    f"{status_icon} [{timestamp}] Envoi {i+1}/{count} | "
+                    f"{status_icon} [{timestamp}] Envoi {i + 1}/{count} | "
                     f"Status: {status} | "
                     f"CPU: {data['cpu_usage']}% | "
                     f"Power: {data['power_watts']}W | "
@@ -138,15 +138,15 @@ class IoTDataSimulator:
 
         # Statistiques finales
         elapsed = time.time() - start_time
-        print(f"\n{'='*70}")
-        print(f"📊 STATISTIQUES")
-        print(f"{'='*70}")
+        print(f"\n{'=' * 70}")
+        print("📊 STATISTIQUES")
+        print(f"{'=' * 70}")
         print(f"✉️  Total envoyés: {self.sent_count}")
         print(f"✅ Succès: {self.success_count}")
         print(f"❌ Erreurs: {self.error_count}")
         print(f"⏱️  Durée totale: {elapsed:.1f}s")
         print(f"📈 Débit: {self.sent_count / elapsed:.2f} msg/s")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
 
 def main():

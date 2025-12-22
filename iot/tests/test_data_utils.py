@@ -6,12 +6,13 @@ import os
 import sys
 import django
 
+# Import iot.data_utils after django.setup()
+from iot import data_utils  # noqa: E402
+
 # Setup Django environment
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nuit_info.settings")
 django.setup()
-
-from iot import data_utils
 
 print("=" * 80)
 print("Testing data_utils.py JSON serialization")
@@ -35,7 +36,7 @@ for name, func in functions:
         # Check if chart_labels is a JSON string
         chart_labels = data.get("chart_labels", "")
         if isinstance(chart_labels, str):
-            print(f"✅ chart_labels is a JSON string")
+            print("✅ chart_labels is a JSON string")
             print(f"   Preview: {chart_labels[:100]}...")
         else:
             print(f"❌ chart_labels is NOT a JSON string (type: {type(chart_labels)})")

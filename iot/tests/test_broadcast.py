@@ -20,7 +20,7 @@ for i in range(5):
 
     # Données minimales
     data = {
-        "hardware_sensor_id": f"ESP32_TEST_{i+1}",
+        "hardware_sensor_id": f"ESP32_TEST_{i + 1}",
         "hardware_timestamp": int(time.time()),
         "cpu_usage": cpu,
         "ram_usage": ram,
@@ -28,7 +28,7 @@ for i in range(5):
         "eco_score": eco,
     }
 
-    print(f"[{i+1}/5] Envoi: CPU={cpu}% RAM={ram}% Power={power}W Eco={eco}")
+    print(f"[{i + 1}/5] Envoi: CPU={cpu}% RAM={ram}% Power={power}W Eco={eco}")
 
     try:
         response = requests.post(url, json=data, timeout=5)

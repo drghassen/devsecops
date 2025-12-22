@@ -151,7 +151,7 @@ CHANNEL_LAYERS = {
 }
 
 # Ensure logs directory exists
-import os
+import os  # noqa: E402
 
 LOGS_DIR = BASE_DIR / "logs"
 if not os.path.exists(LOGS_DIR):
