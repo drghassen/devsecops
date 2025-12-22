@@ -14,3 +14,6 @@ python-decouple==3.8
 
 # Security & Rate Limiting
 django-ratelimit==4.1.0
+
+# HTTP Client (for chatbot proxy)
+requests==2.31.0
