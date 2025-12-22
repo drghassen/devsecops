@@ -1,0 +1,19 @@
+# ============================================================================
+# ECOTRACK IOT - DEVELOPMENT DEPENDENCIES
+# ============================================================================
+
+# Include base requirements
+-r base.txt
+
+# Development Tools
+django-debug-toolbar==4.4.6
+
+# Testing
+coverage==7.6.1
+pytest==8.3.3
+pytest-django==4.9.0
+
+# Code Quality
+flake8==7.1.1
+black==24.10.0
+bandit==1.7.10

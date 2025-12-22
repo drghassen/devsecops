@@ -1,0 +1,16 @@
+# ============================================================================
+# ECOTRACK IOT - BASE DEPENDENCIES (Production)
+# ============================================================================
+
+# Core Django & Production Server
+Django==5.2.7
+daphne==4.1.0
+
+# WebSocket Support
+channels==4.1.0
+
+# Environment Variables
+python-decouple==3.8
+
+# Security & Rate Limiting
+django-ratelimit==4.1.0

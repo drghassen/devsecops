@@ -1,173 +1,196 @@
-# 🌱 EcoTrack IoT - Tableau de Bord Éco-Responsable
+# 🌱 EcoTrack IoT - Nuit de l'Info 2024
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Django](https://img.shields.io/badge/django-5.2.7-green.svg)
-![Python](https://img.shields.io/badge/python-3.10+-brightgreen.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+**Plateforme de monitoring IoT pour le suivi environnemental en temps réel**
 
-> **Plateforme de monitoring IoT en temps réel** pour surveiller et optimiser l'impact environnemental de vos dispositifs connectés.
-
----
+[![CI/CD Pipeline](https://github.com/YOUR_USERNAME/nuit_info/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/nuit_info/actions)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
+[![Django 5.2.7](https://img.shields.io/badge/django-5.2.7-green.svg)](https://www.djangoproject.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 📋 Table des Matières
 
 - [À Propos](#à-propos)
 - [Fonctionnalités](#fonctionnalités)
-- [Technolog
-
-ies](#technologies)
+- [Architecture](#architecture)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Utilisation](#utilisation)
-- [Architecture](#architecture)
-- [API Documentation](#api-documentation)
 - [Tests](#tests)
 - [Déploiement](#déploiement)
 - [Contribution](#contribution)
-- [License](#license)
-
----
 
 ## 🎯 À Propos
 
-**EcoTrack IoT** est une plateforme web moderne qui permet de:
-- 📊 Surveiller en temps réel les métriques de vos appareils IoT
-- 🌍 Calculer et visualiser l'impact environnemental (CO₂, consommation énergétique)
-- 📈 Analyser les tendances avec des graphiques interactifs
-- 🔔 Recevoir des notifications intelligentes sur les anomalies
-- 💡 Obtenir des recommandations pour optimiser votre  consommation
+EcoTrack IoT est une application Django avec support WebSocket temps réel développée pour la **Nuit de l'Info 2024**. Elle permet de monitorer des données IoT environnementales (hardware, énergie, réseau) et propose un quiz éducatif sur les enjeux écologiques du numérique.
 
-### Développé pour la Nuit de l'Info 2024
+### Objectifs du Projet
 
----
+- 📊 Monitoring temps réel de capteurs IoT
+- 🔋 Analyse de l'impact environnemental du matériel informatique
+- 🎓 Sensibilisation via un quiz interactif
+- 🔒 Implémentation DevSecOps complète (CI/CD, tests, sécurité)
 
 ## ✨ Fonctionnalités
 
-### 🔒 Authentification & Sécurité
-- Login sécurisé avec rate limiting (5 tentatives/minute)
-- Gestion de session avec timeout automatique (30 min)
-- Logging des tentatives de connexion
-- Protection CSRF et XSS
+### Core Features
+- ✅ Dashboard temps réel avec WebSockets (Channels)
+- ✅ Collecte et analyse de données IoT multi-capteurs
+- ✅ Système de quiz interactif avec base de données
+- ✅ Recommandations personnalisées basées sur les données
+- ✅ API REST complète
+- ✅ Authentication système
 
-### 📊 Dashboards Interactifs
-- **Dashboard Principal**: Vue d'ensemble des métriques clés
-- **Matériel**: Monitoring CPU, RAM, batterie, âge des dispositifs
-- **Énergie**: Puissance, CO₂, surchauffe, appareils actifs
-- **Réseau**: Bande passante, requêtes, dépendance cloud
-- **Scores**: Scores écologiques, obsolescence, dépendance BigTech
+### DevSecOps
+- ✅ CI/CD avec GitHub Actions
+- ✅ Tests automatisés (pytest, coverage)
+- ✅ Linting (flake8, black)
+- ✅ Scan de sécurité (Trivy, Bandit)
+- ✅ Containerisation Docker
+- ✅ Configuration par variables d'environnement
 
-### 🔄 Temps Réel
-- WebSocket pour mises à jour en direct
-- Graphiques Chart.js dynamiques
-- Notifications push intelligentes
-- Système de seuils configurables
+## 🏗️ Architecture
 
-### 🤖 IA & Recommandations
-- Chatbot intelligent pour assistance
-- Recommandations personnalisées
-- Analyse des tendances
-
-### 🎨 Interface Moderne
-- Design glassmorphism premium
-- Animations fluides et micro-interactions
-- Responsive (mobile, tablet, desktop)
-- Dark mode par défaut
-
----
-
-## 🛠️ Technologies
-
-### Backend
-- **Django 5.2.7** - Framework web Python
-- **Django Channels** - WebSocket support
-- **Daphne** - ASGI server
-- **SQLite** - Base de données (dev)
-
-### Frontend
-- **HTML5/CSS3/JavaScript** (Vanilla)
-- **Bootstrap 5.3.3** - Framework CSS
-- **Chart.js** - Graphiques interactifs
-- **Font Awesome 6.5** - Icônes
-
-### Sécurité & Outils
-- **python-decouple** - Gestion environnement
-- **django-ratelimit** - Rate limiting
-- **django-debug-toolbar** - Debugging (dev)
-- **pytest** - Tests
-
----
-
-## 📦 Installation
-
-### Prérequis
-```bash
-Python 3.10+
-pip
-virtualenv (recommandé)
+```
+nuit_info/
+├── .github/workflows/     # CI/CD pipelines
+├── iot/                   # Application principale
+│   ├── management/        # Django management commands
+│   │   └── commands/
+│   │       └── seed_quiz.py
+│   ├── static/           # Assets (CSS, JS)
+│   ├── templates/        # Templates Django
+│   ├── tests/            # Tests unitaires
+│   │   └── fixtures/     # Données de test
+│   ├── views/            # Vues modulaires
+│   ├── models.py         # Modèles de données
+│   ├── consumers.py      # WebSocket consumers
+│   └── urls.py           # Routes API
+├── nuit_info/            # Configuration Django
+│   ├── settings.py       # Settings (env variables)
+│   ├── asgi.py           # Configuration ASGI
+│   └── urls.py           # URLs racine
+├── requirements/         # Dépendances Python
+│   ├── base.txt          # Production
+│   ├── dev.txt           # Développement
+│   └── prod.txt          # Production optimisée
+├── scripts/              # Scripts utilitaires
+├── logs/                 # Logs application
+├── Dockerfile            # Image Docker développement
+├── docker-compose.yml    # Orchestration containers
+└── .env.example          # Exemple de configuration
 ```
 
-### 1. Cloner le Projet
+### Stack Technique
+
+| Composant | Technologie |
+|-----------|-------------|
+| **Backend** | Django 5.2.7 |
+| **WebSocket** | Django Channels 4.1 |
+| **ASGI Server** | Daphne 4.1 |
+| **Base de Données** | SQLite3 (dev), PostgreSQL (prod ready) |
+| **Frontend** | Vanilla JS, CSS |
+| **Testing** | pytest, coverage |
+| **Linting** | flake8, black |
+| **Security** | Trivy, Bandit |
+| **Container** | Docker, Docker Compose |
+| **CI/CD** | GitHub Actions |
+
+## 🚀 Installation
+
+### Prérequis
+
+- Python 3.13+
+- Docker & Docker Compose (optionnel)
+- Git
+
+### Installation Locale
+
+1. **Cloner le repository**
 ```bash
-git clone <repo-url>
+git clone https://github.com/YOUR_USERNAME/nuit_info.git
 cd nuit_info
 ```
 
-### 2. Créer l'Environnement Virtuel
+2. **Créer un environnement virtuel**
 ```bash
 python -m venv venv
-
 # Windows
-venv\Scripts\activate
-
+venv\\Scripts\\activate
 # Linux/Mac
 source venv/bin/activate
 ```
 
-### 3. Installer les Dépendances
+3. **Installer les dépendances**
 ```bash
-pip install -r requirements.txt
+# Développement
+pip install -r requirements/dev.txt
+
+# Production
+pip install -r requirements/prod.txt
 ```
 
-### 4. Configurer l'Environnement
+4. **Configurer les variables d'environnement**
 ```bash
-# Copier le template d'environnement
-copy .env.example .env   # Windows
-cp .env.example .env     # Linux/Mac
+# Copier le fichier d'exemple
+cp .env.example .env
 
-# Éditer .env et configurer vos variables
+# Générer une SECRET_KEY
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+# Éditer .env et remplacer SECRET_KEY
 ```
 
-### 5. Migrations de Base de Données
+5. **Effectuer les migrations**
 ```bash
-python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 6. Créer un Super Utilisateur
+6. **Charger les données initiales**
+```bash
+python manage.py seed_quiz
+```
+
+7. **Créer un superuser**
 ```bash
 python manage.py createsuperuser
 ```
 
-### 7. Lancer le Serveur
+8. **Lancer le serveur**
 ```bash
 python manage.py runserver
 ```
 
-🎉 **L'application est accessible sur** http://127.0.0.1:8000/api/login/
+Accéder à http://localhost:8000
 
----
+### Installation avec Docker
+
+```bash
+# Build et lancement
+docker-compose up --build
+
+# En arrière-plan
+docker-compose up -d
+
+# Logs
+docker-compose logs -f
+
+# Arrêt
+docker-compose down
+```
 
 ## ⚙️ Configuration
 
-### Variables d'Environnement (.env)
+### Variables d'Environnement
 
-```env
+Créer un fichier `.env` à la racine du projet:
+
+```bash
 # Django Core
 SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Database  
+# Database
 DB_NAME=db.sqlite3
 
 # Security
@@ -176,207 +199,163 @@ CSRF_COOKIE_SECURE=False
 SESSION_COOKIE_SECURE=False
 
 # Logging
-LOG_LEVEL=DEBUG
+LOG_LEVEL=INFO
 ```
 
-### Configuration de Production
+### Configuration Production
 
-Pour la production, modifiez `.env`:
-```env
-DEBUG=False
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-CSRF_COOKIE_SECURE=True
-SESSION_COOKIE_SECURE=True
-LOG_LEVEL=WARNING
+Pour la production, modifier:
+- `DEBUG=False`
+- Utiliser une vraie SECRET_KEY générée
+- Configurer `ALLOWED_HOSTS` avec vos domaines
+- Activer HTTPS (`CSRF_COOKIE_SECURE=True`, `SESSION_COOKIE_SECURE=True`)
+- Passer à PostgreSQL
+
+## 🎮 Utilisation
+
+### Dashboard IoT
+
+Accéder au tableau de bord: http://localhost:8000/api/dashboard/
+
+Features:
+- Visualisation temps réel des données capteurs
+- Graphiques interactifs (hardware, énergie, réseau)
+- Scores environnementaux
+- Recommandations personnalisées
+
+### Quiz Éducatif
+
+Accéder au quiz: http://localhost:8000/api/quiz/
+
+Features:
+- Questions dynamiques depuis la base de données
+- Feedback interactif
+- Résultats et statistiques
+- Fun facts écologiques
+
+### API Endpoints
+
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/dashboard/` | GET | Dashboard principal |
+| `/api/quiz/` | GET | Page du quiz |
+| `/api/quiz/questions/` | GET | Questions du quiz |
+| `/api/quiz/submit/` | POST | Soumettre les résultats |
+| `/api/iot/data/` | GET/POST | Données IoT |
+| `/admin/` | GET | Interface admin Django |
+
+### WebSocket
+
+Connexion WebSocket pour données temps réel:
+```javascript
+const socket = new WebSocket('ws://localhost:8000/ws/iot/');
+
+socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Données IoT:', data);
+};
 ```
-
----
-
-## 🚀 Utilisation
-
-### 1. Connexion
-- Accéder à `/api/login/`
-- Utiliser vos identifiants créés
-
-### 2. Navigation
-- **Dashboard**: Vue d'ensemble
-- **Matériel**: Monitoring hardware
-- **Énergie**: Consommation et CO₂
-- **Réseau**: Trafic réseau
-- **Scores**: Impact écologique
-- **Quiz**: Testez vos connaissances
-
-### 3. Envoyer des Données IoT
-```bash
-POST /api/iot-data/
-Content-Type: application/json
-
-{
-  "hardware_sensor_id": "ESP32_001",
-  "hardware_timestamp": 1701234567,
-  "cpu_usage": 45,
-  "ram_usage": 60,
-  ...
-}
-```
-
----
-
-## 🏗️ Architecture
-
-```
-nuit_info/
-├── iot/                    # Application principale
-│   ├── views/              # Vues (auth, pages, API)
-│   ├── models.py           # Modèles de données
-│   ├── consumers.py        # WebSocket consumers
-│   ├── data_utils.py       # Utilitaires de données
-│   ├── static/             # Fichiers statiques
-│   │   ├── css/            # Styles
-│   │   └── js/             # Scripts
-│   └── templates/          # Templates HTML
-│
-├── nuit_info/              # Configuration projet
-│   ├── settings.py         # Paramètres Django
-│   ├── urls.py             # Routage principal
-│   └── asgi.py             # Configuration ASGI
-│
-├── .env                    # Variables d'environnement
-├── requirements.txt        # Dépendances Python
-└── manage.py               # CLI Django
-```
-
-### Flux de Données
-
-```
-IoT Device → POST /api/iot-data/ → Django View → Database
-                                              ↓
-                                         WebSocket
-                                              ↓
-                                    All Connected Clients
-```
-
----
-
-## 📡 API Documentation
-
-### Endpoints Principaux
-
-#### Authentification
-```http
-POST /api/login/
-POST /api/logout/
-```
-
-#### Données IoT
-```http
-POST /api/iot-data/              # Ingestion données
-GET  /api/latest-data/           # Dernière donnée
-GET  /api/dashboard-data/        # Données dashboard
-GET  /api/hardware-data/         # Données hardware
-GET  /api/energy-data/           # Données énergie
-GET  /api/network-data/          # Données réseau
-GET  /api/scores-data/           # Scores écologiques
-```
-
-#### WebSocket
-```
-ws://127.0.0.1:8000/ws/dashboard/
-ws://127.0.0.1:8000/ws/hardware/
-ws://127.0.0.1:8000/ws/energy/
-ws://127.0.0.1:8000/ws/network/
-ws://127.0.0.1:8000/ws/scores/
-```
-
----
 
 ## 🧪 Tests
 
 ### Lancer les Tests
+
 ```bash
 # Tous les tests
-pytest
+pytest iot/tests/ -v
 
-# Avec coverage
-coverage run -m pytest
+# Tests avec coverage
+coverage run -m pytest iot/tests/
 coverage report
-coverage html
+coverage html  # Rapport HTML dans htmlcov/
+
+# Tests spécifiques
+pytest iot/tests/test_hard_scenarios.py -v
 ```
 
-### Tests Disponibles
-- Tests unitaires des modèles
-- Tests des vues et API
-- Tests des consumers WebSocket
-- Tests d'intégration
-
----
-
-## 🌍 Déploiement
-
-### Production avec Daphne
+### Linting & Formatting
 
 ```bash
-# 1. Collecter les fichiers statiques
-python manage.py collectstatic --noinput
+# Black formatter
+black .
+black --check .  # Vérifier sans modifier
 
-# 2. Lancer Daphne
-daphne -b 0.0.0.0 -p 8000 nuit_info.asgi:application
+# Flake8 linter
+flake8 .
+
+# Bandit security scan
+bandit -r . -f json -o bandit-report.json
 ```
 
-### Avec Docker (optionnel)
-```dockerfile
-# Dockerfile à créer
-FROM python:3.10-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["daphne", "-b", "0.0.0.0", "nuit_info.asgi:application"]
+## 🐳 Déploiement
+
+### Docker Production
+
+1. **Build l'image production**
+```bash
+docker build -f Dockerfile.prod -t ecotrack-iot:prod .
 ```
 
----
+2. **Lancer avec Docker Compose**
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### CI/CD
+
+Le projet utilise GitHub Actions pour:
+- ✅ Linting automatique (flake8, black)
+- ✅ Tests automatisés (pytest + coverage)
+- ✅ Scan de sécurité (Trivy, Bandit)
+- ✅ Build Docker
+
+Voir `.github/workflows/ci.yml` pour la configuration complète.
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues !
+### Workflow de Contribution
 
 1. Fork le projet
 2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit (`git commit -m 'Add AmazingFeature'`)
-4. Push (`git push origin feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
 5. Ouvrir une Pull Request
 
----
+### Standards de Code
+
+- Suivre PEP 8 (vérifier avec flake8)
+- Formatter avec Black (line-length=127)
+- Écrire des tests pour les nouvelles features
+- Documenter les fonctions/classes
+- Utiliser des commits descriptifs
+
+### Avant de Commit
+
+```bash
+# Formatter le code
+black .
+
+# Vérifier le linting
+flake8 .
+
+# Lancer les tests
+pytest iot/tests/ -v
+```
 
 ## 📝 License
 
-Ce projet est sous license MIT. Voir le fichier `LICENSE` pour plus de détails.
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
----
+## 👥 Équipe
 
-## 👥 Auteurs
-
-**Équipe EcoTrack IoT**
-- Développé pour la Nuit de l'Info 2024
-- Contact: [votre-email@example.com]
-
----
+Projet développé pour la **Nuit de l'Info 2024**
 
 ## 🙏 Remerciements
 
-- La Nuit de l'Info pour l'inspiration
-- La communauté Django
-- Tous les contributeurs open-source
+- Nuit de l'Info organizers
+- Django & Channels communities
+- Open source contributors
 
 ---
 
-## 📞 Support
-
-Pour toute question ou problème:
-- 📧 Email: support@ecotrack.io
-- 🐛 Issues: [GitHub Issues]
-- 📖 Documentation: [Wiki]
-
----
-
-**Fait avec ❤️ et ♻️ pour un monde plus durable**
+**Made with ❤️ for the environment during Nuit de l'Info 2024**

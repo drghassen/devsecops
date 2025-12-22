@@ -3,7 +3,7 @@ class ChatbotSystem {
     constructor() {
         this.sessionId = this.generateSessionId();
         this.messages = [];
-        this.apiUrl = 'http://37.59.116.54:8000/chat';
+        this.apiUrl = '/api/chatbot/';
         this.init();
     }
 

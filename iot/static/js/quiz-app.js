@@ -1,22 +1,49 @@
 // Variables globales
 let current = 0;
 let score = 0;
-const selected = new Array(questions.length).fill(null);
+let questions = [];
+let randomFacts = [];
+let moods = [];
+let selected = [];
 
 // Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('score').textContent = score;
-  updateStats();
-  renderQuestion();
-  updateRandomFact();
-  
-  // Mettre à jour le fait aléatoire toutes les 15 secondes
-  setInterval(updateRandomFact, 15000);
-  
-  // Événements des boutons
-  document.getElementById('prevBtn').addEventListener('click', prevQuestion);
-  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        await loadQuizData();
+        if (questions.length > 0) {
+            selected = new Array(questions.length).fill(null);
+            document.getElementById('score').textContent = score;
+            updateStats();
+            renderQuestion();
+            updateRandomFact();
+            
+            // Mettre à jour le fait aléatoire toutes les 15 secondes
+            setInterval(updateRandomFact, 15000);
+            
+            // Événements des boutons
+            document.getElementById('prevBtn').addEventListener('click', prevQuestion);
+            document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        } else {
+            document.getElementById('quiz').innerHTML = '<div class="alert alert-warning">Aucune question disponible pour le moment.</div>';
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement du quiz:', error);
+        document.getElementById('quiz').innerHTML = '<div class="alert alert-danger">Erreur de chargement du quiz. Veuillez réessayer plus tard.</div>';
+    }
 });
+
+async function loadQuizData() {
+    const response = await fetch('/api/quiz/questions/');
+    if (!response.ok) throw new Error('Erreur réseau');
+    
+    const data = await response.json();
+    questions = data.questions;
+    randomFacts = data.facts;
+    moods = data.moods;
+    
+    // Initialise les sélections
+    selected = new Array(questions.length).fill(null);
+}
 
 // Fonctions d'affichage
 function createEmojiRain(emoji, count = 15) {
@@ -57,19 +84,28 @@ function showReaction(text) {
 }
 
 function updateMood() {
-  const percentage = (score / questions.length) * 100;
-  let moodIndex = Math.min(5, Math.floor(percentage / 20));
+  if (!moods.length) return;
   
-  const moodData = moods[moodIndex];
+  const percentage = (score / questions.length) * 100;
+  // Trouve le mood approprié basé sur le min_percentage
+  let currentMood = moods[0];
+  for (let m of moods) {
+      if (percentage >= m.min_percentage) {
+          currentMood = m;
+      }
+  }
+  
   const moodContainer = document.getElementById('moodMeter');
-  document.getElementById('moodEmoji').textContent = moodData.emoji;
-  document.getElementById('moodText').textContent = moodData.text;
-  moodContainer.style.backgroundColor = moodData.color;
+  if (moodContainer) {
+      document.getElementById('moodEmoji').textContent = currentMood.emoji;
+      document.getElementById('moodText').textContent = currentMood.text;
+      moodContainer.style.backgroundColor = currentMood.color;
+  }
 }
 
 function updateRandomFact() {
   const factElement = document.getElementById('randomFact');
-  if (factElement) {
+  if (factElement && randomFacts.length > 0) {
     factElement.textContent = randomFacts[Math.floor(Math.random() * randomFacts.length)];
   }
 }
@@ -85,6 +121,8 @@ function updateStats() {
 }
 
 function renderQuestion() {
+  if (!questions.length) return;
+
   const q = questions[current];
   const root = document.getElementById('quiz');
   const pct = Math.round(((current) / questions.length) * 100);
@@ -168,65 +206,83 @@ function nextQuestion() {
 }
 
 // Résultats finaux
-function showFinalResults() {
+async function showFinalResults() {
   document.getElementById('progressBar').style.width = '100%';
   const root = document.getElementById('quiz');
-  const percentage = (score / questions.length) * 100;
   
-  let message, subMessage, emoji, color, badge;
-  
-  if(percentage === 100) {
-    message = "🎯 SCORE PARFAIT ! LÉGENDE CONFIRMÉE !";
-    subMessage = "Vous êtes officiellement un Maître Jedi de l'IoT Éco-Responsable. Même Yoda est jaloux.";
-    emoji = "👑";
-    color = "warning";
-    badge = "🏆 PERFECTION ABSOLUE";
-    createConfetti();
-    createEmojiRain('🏆', 30);
-    createEmojiRain('👑', 20);
-  } else if(percentage >= 80) {
-    message = "🔥 EXCELLENT ! Vous êtes dans le Top 1% !";
-    subMessage = "Niveau: Expert Senior Principal Architect Lead. Vous pouvez mettre ça sur LinkedIn.";
-    emoji = "🚀";
-    color = "success";
-    badge = "⭐ EXPERT CONFIRMÉ";
-    createEmojiRain('⭐', 20);
-  } else if(percentage >= 60) {
-    message = "👍 Solide ! Vous maîtrisez les bases !";
-    subMessage = "Niveau: Développeur Conscient. Vous êtes sur la bonne voie, padawan.";
-    emoji = "😎";
-    color = "primary";
-    badge = "💎 BON NIVEAU";
-  } else if(percentage >= 40) {
-    message = "😅 Pas mal ! Mais faut réviser un peu...";
-    subMessage = "Niveau: Junior Prometteur. On sent le potentiel, mais faut bosser.";
-    emoji = "📚";
-    color = "info";
-    badge = "📖 EN APPRENTISSAGE";
-  } else if(percentage >= 20) {
-    message = "😬 Ouch... Houston, we have a problem";
-    subMessage = "Niveau: Stagiaire Premier Jour. Pas de panique, tout le monde est passé par là !";
-    emoji = "🆘";
-    color = "warning";
-    badge = "⚠️ BESOIN DE FORMATION";
-  } else {
-    message = "💀 Résultat... surprenant !";
-    subMessage = "Niveau: Réponses Aléatoires. Un singe qui tape au hasard aurait fait mieux (désolé).";
-    emoji = "🙈";
-    color = "danger";
-    badge = "🚨 URGENT: RELIRE LES DOCS";
+  // Submit results to backend
+  try {
+      const response = await fetch('/api/quiz/submit/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              answers: selected
+          })
+      });
+      
+      if (response.ok) {
+          const resultData = await response.json();
+          renderResultScreen(resultData, root);
+      } else {
+          // Fallback if API fails
+          const percentage = (score / questions.length) * 100;
+          renderResultScreen({
+              percentage: percentage,
+              score: score,
+              total: questions.length,
+              // Backend would provide these, but fallback just in case
+              message: "Quiz terminé !",
+              title: "Résultat",
+              emoji: "🏁",
+              color_class: "primary",
+              badge_text: "Terminé"
+          }, root);
+      }
+  } catch (error) {
+      console.error('Error submitting quiz:', error);
+      // Construct minimal result object for display
+      const percentage = (score / questions.length) * 100;
+      renderResultScreen({
+          percentage: percentage,
+          score: score,
+          total: questions.length,
+          message: "Quiz terminé (Résultat non sauvegardé)",
+          title: "Résultat",
+          emoji: "⚠️",
+          color_class: "warning",
+          badge_text: "Hors Ligne"
+      }, root);
   }
-  
+}
+
+function renderResultScreen(data, root) {
+    const { percentage, score, total, message, title, emoji, color_class, badge_text } = data;
+    
+    // Trigger effects
+    if (percentage === 100) {
+        createConfetti();
+        createEmojiRain('🏆', 30);
+        createEmojiRain('👑', 20);
+    } else if (percentage >= 80) {
+        createEmojiRain('⭐', 20);
+    }
+
+    // Determine color class if not provided (fallback)
+    const color = color_class || (percentage >= 50 ? 'success' : 'warning');
+    const badge = badge_text || `${percentage}%`;
+
   root.innerHTML = `<div class='text-center py-5'>
-    <div class='mb-4' style='font-size: 6rem; animation: bounce 1s infinite;'>${emoji}</div>
+    <div class='mb-4' style='font-size: 6rem; animation: bounce 1s infinite;'>${emoji || '🏁'}</div>
     
     <div class='mb-3'>
       <span class='badge bg-${color} fs-6 px-3 py-2'>${badge}</span>
     </div>
     
-    <h2 class='mb-3 fw-bold'>${message}</h2>
-    <p class='lead mb-2'>Score Final: <strong class='text-${color} fs-3'>${score}/${questions.length}</strong> <span class='text-muted'>(${percentage.toFixed(0)}%)</span></p>
-    <p class='text-muted mb-4 mx-auto' style='max-width: 600px;'>${subMessage}</p>
+    <h2 class='mb-3 fw-bold'>${title || 'Résultat du Quiz'}</h2>
+    <p class='lead mb-2'>Score Final: <strong class='text-${color} fs-3'>${score}/${total}</strong> <span class='text-muted'>(${typeof percentage === 'number' ? percentage.toFixed(0) : percentage}%)</span></p>
+    <p class='text-muted mb-4 mx-auto' style='max-width: 600px;'>${message}</p>
     
     <div class='alert alert-info mx-auto' style='max-width: 700px;'>
       <i class='fas fa-quote-left me-2'></i>
@@ -251,6 +307,6 @@ function showFinalResults() {
     </div>
   </div>`;
   
-  document.getElementById('prevBtn').disabled = true;
-  document.getElementById('nextBtn').disabled = true;
+  if(document.getElementById('prevBtn')) document.getElementById('prevBtn').disabled = true;
+  if(document.getElementById('nextBtn')) document.getElementById('nextBtn').disabled = true;
 }

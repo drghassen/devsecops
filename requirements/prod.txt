@@ -1,0 +1,14 @@
+# ============================================================================
+# ECOTRACK IOT - PRODUCTION DEPENDENCIES
+# ============================================================================
+
+# Include base requirements
+-r base.txt
+
+# Production extras (if needed)
+# Uncomment when ready for production database
+# psycopg2-binary==2.9.9
+
+# Uncomment when adding Redis cache
+# redis==5.0.8
+# django-redis==5.4.0
