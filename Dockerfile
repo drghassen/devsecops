@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.13-slim
+FROM python:3.13-alpine
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -10,10 +10,11 @@ ENV DJANGO_SETTINGS_MODULE=nuit_info.settings
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# build-base is the Alpine equivalent of build-essential
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    libffi-dev
 
 # Install Python dependencies
 COPY requirements.txt /app/
@@ -23,10 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Create a non-root user
-RUN addgroup --system django && adduser --system --group django
+RUN addgroup -S django && adduser -S django -G django
 
 # Pre-create directories and set permissions
-# We do this as root before switching USER
 RUN mkdir -p /app/staticfiles /app/media /app/logs
 RUN chown -R django:django /app
 

@@ -1,7 +1,7 @@
 # ===========================================
 # PRODUCTION DOCKERFILE - Multi-stage build
 # ===========================================
-FROM python:3.13-slim as builder
+FROM python:3.13-alpine as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -10,10 +10,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    libffi-dev
 
 # Install Python dependencies
 COPY requirements/prod.txt /app/requirements.txt
@@ -22,7 +22,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.t
 # ===========================================
 # PRODUCTION IMAGE
 # ===========================================
-FROM python:3.13-slim
+FROM python:3.13-alpine
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -32,9 +32,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache libpq
 
 # Copy wheels from builder
 COPY --from=builder /app/wheels /wheels
@@ -53,7 +51,7 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs
 RUN python manage.py collectstatic --noinput --clear
 
 # Create non-root user
-RUN addgroup --system django && adduser --system --group django
+RUN addgroup -S django && adduser -S django -G django
 
 # Change ownership
 RUN chown -R django:django /app
