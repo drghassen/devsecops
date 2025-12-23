@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
-from iot.models import QuizFact, QuizMood, QuizResultMessage, SystemSetting, QuizQuestion
+
+from iot.models import (QuizFact, QuizMood, QuizQuestion, QuizResultMessage,
+                        SystemSetting)
 
 
 class Command(BaseCommand):

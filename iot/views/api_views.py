@@ -1,33 +1,33 @@
-"""
-API views for JSON responses and data ingestion
-"""
-
 import json
+import logging
+import time
+
+import requests
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from decouple import config
+from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from ..models import IoTData, SystemSetting, QuizQuestion, QuizResult, QuizFact, QuizMood, QuizResultMessage
-import requests
+
+from .. import data_utils
+from ..models import (IoTData, QuizFact, QuizMood, QuizQuestion, QuizResult,
+                      QuizResultMessage, SystemSetting)
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def iot_data_post(request):
-    """
-    Handle IoT data ingestion via POST request
-    Sends real-time updates via WebSocket to all connected clients
-    """
     try:
         data = json.loads(request.body)
-
-        # Extract nested data structures (from Node-RED format)
-        # Support both nested format and flat format for backwards compatibility
         hardware_data = data.get("hardware", data)
         energy_data = data.get("energy", data)
         network_data = data.get("network", data)
         scores_data = data.get("scores", data)
 
-        # Create new IoT data record
         iot_data = IoTData.objects.create(
             # Hardware fields - try nested first, then root
             hardware_sensor_id=hardware_data.get("sensor_id", data.get("hardware_sensor_id", "unknown")),
@@ -59,11 +59,6 @@ def iot_data_post(request):
             recommendations=scores_data.get("recommendations", {}),
         )
 
-        # Send updated data via WebSocket to all connected clients
-        from channels.layers import get_channel_layer
-        from asgiref.sync import async_to_sync
-        from .. import data_utils
-
         channel_layer = get_channel_layer()
 
         # Define groups and their data functions
@@ -83,8 +78,7 @@ def iot_data_post(request):
                 data_dict = data_functions[group]()
                 async_to_sync(channel_layer.group_send)(group, {"type": "data_update", "data": data_dict})
             except Exception as e:
-                # Log error but don't block response
-                print(f"Error sending WebSocket to group {group}: {e}")
+                logger.error(f"Error sending WebSocket to group {group}: {e}")
 
         return JsonResponse({"message": "IoT data created successfully", "id": iot_data.id}, status=201)
 
@@ -96,10 +90,7 @@ def iot_data_post(request):
 
 @require_http_methods(["GET"])
 def get_latest_data(request):
-    """Get the most recent IoT data record"""
     try:
-        from .. import data_utils
-
         latest_data = IoTData.objects.order_by("-created_at").first()
 
         if latest_data:
@@ -114,10 +105,7 @@ def get_latest_data(request):
 
 @require_http_methods(["GET"])
 def get_dashboard_data(request):
-    """Get dashboard data for WebSocket/API consumption"""
     try:
-        from .. import data_utils
-
         data = data_utils.get_dashboard_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
@@ -126,10 +114,7 @@ def get_dashboard_data(request):
 
 @require_http_methods(["GET"])
 def get_hardware_data(request):
-    """Get hardware data for WebSocket/API consumption"""
     try:
-        from .. import data_utils
-
         data = data_utils.get_hardware_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
@@ -138,10 +123,7 @@ def get_hardware_data(request):
 
 @require_http_methods(["GET"])
 def get_energy_data(request):
-    """Get energy data for WebSocket/API consumption"""
     try:
-        from .. import data_utils
-
         data = data_utils.get_energy_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
@@ -150,10 +132,7 @@ def get_energy_data(request):
 
 @require_http_methods(["GET"])
 def get_network_data(request):
-    """Get network data for WebSocket/API consumption"""
     try:
-        from .. import data_utils
-
         data = data_utils.get_network_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
@@ -162,10 +141,7 @@ def get_network_data(request):
 
 @require_http_methods(["GET"])
 def get_scores_data(request):
-    """Get scores data for WebSocket/API consumption"""
     try:
-        from .. import data_utils
-
         data = data_utils.get_scores_data_dict()
         return JsonResponse(data, status=200)
     except Exception as e:
@@ -174,17 +150,9 @@ def get_scores_data(request):
 
 @require_http_methods(["GET"])
 def get_history_data(request):
-    """
-    Get paginated history data.
-    Params:
-        page: int, default 1
-        limit: int, default 8
-    """
     try:
         page = int(request.GET.get("page", 1))
         limit = int(request.GET.get("limit", 8))
-
-        from .. import data_utils
 
         data = data_utils.get_paginated_iot_data(page, limit)
         return JsonResponse(data, status=200)
@@ -196,20 +164,11 @@ def get_history_data(request):
 
 @require_http_methods(["GET"])
 def get_session_info(request):
-    """
-    Get session information including expiry time.
-    Used to synchronize client-side session timer with Django's session.
-    """
-    from django.conf import settings
-    import time
-
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=401)
 
-    # Get session expiry settings
-    session_cookie_age = getattr(settings, "SESSION_COOKIE_AGE", 1800)  # Default 30 min
+    session_cookie_age = getattr(settings, "SESSION_COOKIE_AGE", 1800)  
 
-    # Get or set session start time
     if "session_start_time" not in request.session:
         request.session["session_start_time"] = time.time()
 
@@ -218,7 +177,6 @@ def get_session_info(request):
     elapsed = current_time - session_start
     remaining = max(0, session_cookie_age - elapsed)
 
-    # Update last activity
     request.session["last_activity"] = current_time
 
     return JsonResponse(
@@ -238,16 +196,9 @@ def get_session_info(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def extend_session(request):
-    """
-    Extend the session by resetting the session start time.
-    Called when user is active.
-    """
-    import time
-
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Not authenticated"}, status=401)
 
-    # Reset session start time
     request.session["session_start_time"] = time.time()
     request.session["last_activity"] = time.time()
 
@@ -257,18 +208,13 @@ def extend_session(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_proxy(request):
-    """
-    Proxy requests to the external Chatbot API.
-    Hides the external API URL from the frontend and handles connection errors.
-    """
     try:
-        # Get Chatbot URL from settings
+        chatbot_url_default = config("CHATBOT_URL", default="http://37.59.116.54:8000/chat")
         setting = SystemSetting.objects.filter(key="chatbot_url").first()
-        chatbot_url = setting.value if setting else "http://37.59.116.54:8000/chat"
+        chatbot_url = setting.value if setting else chatbot_url_default
 
         data = json.loads(request.body)
 
-        # Forward request to external service
         response = requests.post(chatbot_url, json=data, headers={"Content-Type": "application/json"}, timeout=10)
 
         if response.ok:
@@ -286,16 +232,11 @@ def chatbot_proxy(request):
 
 @require_http_methods(["GET"])
 def get_system_settings(request):
-    """
-    Expose specific system settings (thresholds) to the frontend.
-    """
-    # Define which keys are safe to expose
     safe_keys = ["cpu_threshold", "ram_threshold", "power_threshold", "co2_threshold", "eco_threshold"]
 
     settings = SystemSetting.objects.filter(key__in=safe_keys)
     settings_dict = {s.key: s.value for s in settings}
 
-    # Provide defaults if not in DB
     defaults = {
         "cpu_threshold": "80",
         "ram_threshold": "85",
@@ -313,10 +254,6 @@ def get_system_settings(request):
 
 @require_http_methods(["GET"])
 def get_quiz_questions(request):
-    """
-    Get all active quiz questions ordered by 'order' fields.
-    Also returns random facts, moods, and result messages for the frontend.
-    """
     questions = QuizQuestion.objects.filter(is_active=True).order_by("order")
     facts = QuizFact.objects.filter(is_active=True)
     moods = QuizMood.objects.all()
@@ -356,37 +293,27 @@ def get_quiz_questions(request):
 @require_http_methods(["POST"])
 def submit_quiz_result(request):
     """
-    Submit quiz results and save to database.
-    Calculates score server-side for integrity.
+    Handle quiz submission and calculate results.
+    Refactored to reduce complexity (Radon rank C -> A/B).
     """
     try:
         data = json.loads(request.body)
-        answers = data.get("answers", [])  # List of indices
+        answers = data.get("answers", [])
 
         if not answers:
             return JsonResponse({"error": "No answers provided"}, status=400)
 
         questions = QuizQuestion.objects.filter(is_active=True).order_by("order")
 
-        # Calculate score
-        score = 0
-        total = len(questions)
+        # Delegate score calculation to utility
+        score, total, percentage = data_utils.calculate_quiz_score(answers, questions)
 
-        # Ensure we don't index out of bounds if question count changed
-        comparable_count = min(len(answers), total)
-
-        for i in range(comparable_count):
-            if answers[i] == questions[i].correct_answer:
-                score += 1
-
-        percentage = (score / total) * 100 if total > 0 else 0
-
-        # Save result
         user = request.user if request.user.is_authenticated else None
 
+        # Save result
         QuizResult.objects.create(user=user, score=score, total_questions=total, percentage=percentage)
 
-        # Find appropriate result message
+        # Get appropriate feedback message
         result_msg = QuizResultMessage.objects.filter(min_percentage__lte=percentage).order_by("-min_percentage").first()
 
         return JsonResponse(

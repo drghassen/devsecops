@@ -1,12 +1,13 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+
 from asgiref.sync import sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.core.serializers.json import DjangoJSONEncoder
+
 from . import data_utils
 
 
 class BaseDataConsumer(AsyncWebsocketConsumer):
-    """Consumer de base pour toutes les interfaces IoT"""
 
     group_name = None
 

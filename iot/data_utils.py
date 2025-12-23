@@ -1,13 +1,6 @@
-"""
-Utilitaires pour préparer les données pour les WebSockets et les vues API
-Single source of truth for all data preparation
-"""
-
 import json
+
 from .models import IoTData
-
-
-# ==================== HELPER FUNCTIONS ====================
 
 
 def get_latest_iot_data(limit=8):
@@ -44,12 +37,14 @@ def get_dashboard_data_dict():
     """Prépare les données pour le dashboard"""
     latest_data = get_latest_iot_data()
 
-    labels = [str(data.created_at.strftime("%H:%M:%S")) for data in reversed(latest_data)]
-    cpu_data = [data.cpu_usage for data in reversed(latest_data)]
-    ram_data = [data.ram_usage for data in reversed(latest_data)]
-    power_data = [data.power_watts for data in reversed(latest_data)]
-    eco_data = [data.eco_score for data in reversed(latest_data)]
-    co2_data = [data.co2_equiv_g for data in reversed(latest_data)]
+    field_mappings = {
+        "cpu_data": "cpu_usage",
+        "ram_data": "ram_usage",
+        "power_data": "power_watts",
+        "eco_data": "eco_score",
+        "co2_data": "co2_equiv_g",
+    }
+    labels, chart_data = prepare_chart_data(latest_data, field_mappings)
 
     table_data = [
         {
@@ -59,18 +54,18 @@ def get_dashboard_data_dict():
             "ram_usage": data.ram_usage,
             "power_watts": data.power_watts,
             "eco_score": data.eco_score,
-            "created_at": data.created_at.isoformat(),  # Format ISO pour JavaScript
+            "created_at": data.created_at.isoformat(),
         }
         for data in latest_data
     ]
 
     return {
         "chart_labels": json.dumps(labels),
-        "cpu_data": json.dumps(cpu_data),
-        "ram_data": json.dumps(ram_data),
-        "power_data": json.dumps(power_data),
-        "eco_data": json.dumps(eco_data),
-        "co2_data": json.dumps(co2_data),
+        "cpu_data": json.dumps(chart_data["cpu_data"]),
+        "ram_data": json.dumps(chart_data["ram_data"]),
+        "power_data": json.dumps(chart_data["power_data"]),
+        "eco_data": json.dumps(chart_data["eco_data"]),
+        "co2_data": json.dumps(chart_data["co2_data"]),
         "latest_data": table_data,
     }
 
@@ -287,7 +282,7 @@ def get_paginated_iot_data(page_number=1, limit=8):
     Retrieves paginated IoT data.
     Returns a dictionary with data and metadata.
     """
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 
     # Fetch all data, ordered by newest first
     queryset = IoTData.objects.all().order_by("-created_at")
@@ -355,3 +350,19 @@ def get_paginated_iot_data(page_number=1, limit=8):
             "end_index": page_obj.end_index(),
         },
     }
+
+def calculate_quiz_score(answers, questions):
+    """
+    Calculates the score and percentage for a list of answers.
+    Returns a tuple (score, total, percentage).
+    """
+    score = 0
+    total = len(questions)
+    comparable_count = min(len(answers), total)
+
+    for i in range(comparable_count):
+        if answers[i] == questions[i].correct_answer:
+            score += 1
+
+    percentage = (score / total) * 100 if total > 0 else 0
+    return score, total, percentage

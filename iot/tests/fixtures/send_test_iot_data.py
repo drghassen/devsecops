@@ -13,11 +13,16 @@ Usage:
     python send_test_iot_data.py --count 20 --interval 1
 """
 
-import requests
-import time
-import random
 import argparse
+import random
+import time
 from datetime import datetime
+
+import requests
+
+# Use a secure random generator to satisfy security scanners (Bandit B311)
+# even though this is just for test data.
+random = random.SystemRandom()
 
 
 class IoTDataSimulator:
@@ -38,24 +43,24 @@ class IoTDataSimulator:
 
         # CPU plus élevé pendant les heures de bureau (9h-18h)
         cpu_base = 60 if 9 <= hour <= 18 else 40
-        cpu_usage = min(100, max(0, cpu_base + random.randint(-20, 30)))
+        cpu_usage = min(100, max(0, cpu_base + random.randint(-20, 30)))  # nosec B311
 
         # RAM augmente avec le CPU
-        ram_base = cpu_usage - random.randint(5, 15)
+        ram_base = cpu_usage - random.randint(5, 15)  # nosec B311
         ram_usage = min(100, max(20, ram_base))
 
         # Puissance corrélée au CPU
         power_base = cpu_usage * 2
-        power_watts = max(50, min(300, power_base + random.randint(-30, 30)))
+        power_watts = max(50, min(300, power_base + random.randint(-30, 30)))  # nosec B311
 
         # Score éco inversement proportionnel à la puissance
         eco_score = max(20, min(100, 100 - (power_watts // 3)))
 
         # CO2 basé sur puissance (fictif)
-        co2_equiv_g = power_watts * random.uniform(1.5, 2.5)
+        co2_equiv_g = power_watts * random.uniform(1.5, 2.5)  # nosec B311
 
         # Température proportionnelle au CPU
-        temperature_c = 25 + (cpu_usage * 0.5) + random.uniform(-3, 3)
+        temperature_c = 25 + (cpu_usage * 0.5) + random.uniform(-3, 3)  # nosec B311
 
         return {
             # Hardware
@@ -63,23 +68,23 @@ class IoTDataSimulator:
             "hardware_timestamp": int(time.time()),
             "cpu_usage": round(cpu_usage, 1),
             "ram_usage": round(ram_usage, 1),
-            "battery_level": round(random.uniform(60, 100), 1),
-            "device_age_months": random.randint(6, 36),
+            "battery_level": round(random.uniform(60, 100), 1),  # nosec B311
+            "device_age_months": random.randint(6, 36),  # nosec B311
             "temperature_c": round(temperature_c, 1),
             # Energy
             "power_watts": round(power_watts, 1),
             "co2_equiv_g": round(co2_equiv_g, 2),
             "overheating_risk": 1 if temperature_c > 75 else 0,
-            "active_devices": random.randint(3, 12),
+            "active_devices": random.randint(3, 12),  # nosec B311
             # Network
-            "bandwidth_mbps": round(random.uniform(10, 500), 2),
-            "network_requests_per_sec": random.randint(50, 500),
-            "cloud_dependency_pct": round(random.uniform(30, 85), 1),
-            "data_center_location": random.choice(["EU", "US", "ASIA"]),
+            "bandwidth_mbps": round(random.uniform(10, 500), 2),  # nosec B311
+            "network_requests_per_sec": random.randint(50, 500),  # nosec B311
+            "cloud_dependency_pct": round(random.uniform(30, 85), 1),  # nosec B311
+            "data_center_location": random.choice(["EU", "US", "ASIA"]),  # nosec B311
             # Scores
             "eco_score": round(eco_score, 1),
-            "obsolescence_score": round(random.uniform(40, 90), 1),
-            "bigtech_dependency": round(random.uniform(30, 80), 1),
+            "obsolescence_score": round(random.uniform(40, 90), 1),  # nosec B311
+            "bigtech_dependency": round(random.uniform(30, 80), 1),  # nosec B311
         }
 
     def send_data(self, data):

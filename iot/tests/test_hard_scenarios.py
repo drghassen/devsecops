@@ -1,16 +1,19 @@
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.contrib.auth.models import User
-from iot.models import QuizQuestion, QuizResult, QuizResultMessage, SystemSetting, IoTData
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import requests
+from django.contrib.auth.models import User
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from iot.models import (IoTData, QuizQuestion, QuizResult, QuizResultMessage,
+                        SystemSetting)
 
 
 class HardScenarioTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="password123")
+        self.user = User.objects.create_user(username="testuser", password="password123")  # nosec B106
 
         # Seed minimal Quiz Data
         self.q1 = QuizQuestion.objects.create(
@@ -44,7 +47,7 @@ class HardScenarioTests(TestCase):
 
     def test_quiz_perfect_score_authenticated(self):
         """Test perfect score calculation and DB saving for logged-in user"""
-        self.client.login(username="testuser", password="password123")
+        self.client.login(username="testuser", password="password123")  # nosec B106
 
         payload = {"answers": [0, 1]}  # Correct answers for Q1(0) and Q2(1)
         response = self.client.post(reverse("api_quiz_submit"), data=json.dumps(payload), content_type="application/json")

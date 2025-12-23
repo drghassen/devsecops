@@ -2,9 +2,13 @@
 """
 Script de test simple pour vérifier le broadcast temps réel
 """
-import requests
-import time
 import random
+import time
+
+import requests
+
+# Secure random for scanner compliance
+random = random.SystemRandom()
 
 url = "http://127.0.0.1:8000/api/iot-data/"
 
@@ -13,10 +17,10 @@ print("TEST BROADCAST TEMPS REEL - Dashboard IoT")
 print("=" * 60 + "\n")
 
 for i in range(5):
-    cpu = random.randint(40, 95)
-    ram = random.randint(50, 85)
-    power = random.randint(100, 300)
-    eco = random.randint(30, 80)
+    cpu = random.randint(40, 95)  # nosec B311
+    ram = random.randint(50, 85)  # nosec B311
+    power = random.randint(100, 300)  # nosec B311
+    eco = random.randint(30, 80)  # nosec B311
 
     # Données minimales
     data = {
