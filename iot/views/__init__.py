@@ -3,15 +3,26 @@ IoT Views Package
 Organized view modules using data_utils.py as single source of truth
 """
 
-from .api_views import (chatbot_proxy, extend_session, get_dashboard_data,
-                        get_energy_data, get_hardware_data, get_history_data,
-                        get_latest_data, get_network_data, get_quiz_questions,
-                        get_scores_data, get_session_info, get_system_settings,
-                        iot_data_post, submit_quiz_result)
+from .api_views import (
+    chatbot_proxy,
+    extend_session,
+    get_dashboard_data,
+    get_energy_data,
+    get_hardware_data,
+    get_history_data,
+    get_latest_data,
+    get_network_data,
+    get_quiz_questions,
+    get_scores_data,
+    get_session_info,
+    get_system_settings,
+    iot_data_post,
+    submit_quiz_result,
+)
+
 # Import all views to maintain backward compatibility
 from .auth_views import login_view, logout_view
-from .page_views import (dashboard, energy_view, hardware_view, network_view,
-                         quiz_view, scores_view)
+from .page_views import dashboard, energy_view, hardware_view, network_view, quiz_view, scores_view
 
 __all__ = [
     # Authentication

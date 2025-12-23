@@ -6,8 +6,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from iot.models import (IoTData, QuizQuestion, QuizResult, QuizResultMessage,
-                        SystemSetting)
+from iot.models import IoTData, QuizQuestion, QuizResult, QuizResultMessage, SystemSetting
 
 
 class HardScenarioTests(TestCase):

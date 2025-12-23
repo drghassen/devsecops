@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from .models import (IoTData, QuizFact, QuizMood, QuizQuestion, QuizResult,
-                     QuizResultMessage, SystemSetting)
+from .models import IoTData, QuizFact, QuizMood, QuizQuestion, QuizResult, QuizResultMessage, SystemSetting
 
 
 @admin.register(SystemSetting)

@@ -351,6 +351,7 @@ def get_paginated_iot_data(page_number=1, limit=8):
         },
     }
 
+
 def calculate_quiz_score(answers, questions):
     """
     Calculates the score and percentage for a list of answers.

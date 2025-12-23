@@ -12,8 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .. import data_utils
-from ..models import (IoTData, QuizFact, QuizMood, QuizQuestion, QuizResult,
-                      QuizResultMessage, SystemSetting)
+from ..models import IoTData, QuizFact, QuizMood, QuizQuestion, QuizResult, QuizResultMessage, SystemSetting
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +166,7 @@ def get_session_info(request):
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=401)
 
-    session_cookie_age = getattr(settings, "SESSION_COOKIE_AGE", 1800)  
+    session_cookie_age = getattr(settings, "SESSION_COOKIE_AGE", 1800)
 
     if "session_start_time" not in request.session:
         request.session["session_start_time"] = time.time()
