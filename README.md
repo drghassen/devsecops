@@ -1,4 +1,4 @@
-# 🌱 EcoTrack IoT - Nuit de l'Info 2024
+# 🌱 EcoTrack IoT - Nuit de l'Info 2025
 
 **Plateforme de monitoring IoT pour le suivi environnemental en temps réel**
 
